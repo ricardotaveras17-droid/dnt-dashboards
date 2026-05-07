@@ -807,10 +807,12 @@ function renderBreakeven() {
       { label: "Current pace",                closes: closedProjectedAnnual, dealSize: dealSize },
       { label: "+10% conversion lift",        closes: Math.round(closedProjectedAnnual * 1.1), dealSize: dealSize },
       { label: "+25% conversion lift",        closes: Math.round(closedProjectedAnnual * 1.25), dealSize: dealSize },
-      { label: "Raise avg deal size to $35K", closes: closedProjectedAnnual, dealSize: 35000 },
-      { label: "Raise avg deal size to $50K", closes: closedProjectedAnnual, dealSize: 50000 }
+      { label: "Raise avg deal size to $50K (wholetail-heavy)", closes: closedProjectedAnnual, dealSize: 50000 },
+      { label: "Raise avg deal size to $80K (flip-heavy)", closes: closedProjectedAnnual, dealSize: 80000 },
+      { label: "Raise avg deal size to $100K (add-a-level-heavy)", closes: closedProjectedAnnual, dealSize: 100000 },
+      { label: "Raise avg deal size to $250K (new construction-heavy)", closes: closedProjectedAnnual, dealSize: 250000 }
     ];
-    paceT.innerHTML = `<thead><tr><th class="left">SCENARIO</th><th>PROJECTED CLOSES</th><th>AVG DEAL SIZE</th><th>PROJECTED REVENUE</th><th>ANNUAL SPEND</th><th>PROFIT</th><th>MARGIN</th></tr></thead><tbody>
+    paceT.innerHTML = `<thead><tr><th class="left">SCENARIO</th><th>PROJECTED CLOSES/YR</th><th>AVG DEAL SIZE</th><th>PROJECTED REVENUE</th><th>PROJECTED ANNUAL SPEND</th><th>PROFIT</th><th>MARGIN</th></tr></thead><tbody>
       ${scenarios.map(s => { const rev = s.closes * s.dealSize; const profit = rev - runRate; const margin = (profit / rev * 100) || 0;
         return `<tr><td class="left">${s.label}</td><td>${s.closes}</td><td>${fmt$k(s.dealSize)}</td><td style="color:#4dd0e1;">${fmt$k(rev)}</td><td style="color:#fb923c;">${fmt$k(runRate)}</td><td style="color:${profit>=0?'#4ade80':'#f87171'};font-weight:600;">${profit>=0?'+':''}${fmt$k(profit)}</td><td style="color:${margin>=0?'#4ade80':'#f87171'};">${margin.toFixed(1)}%</td></tr>`;
       }).join("")}</tbody>`;
