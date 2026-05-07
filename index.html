@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNT Home Buyers — Dashboards</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: #0c1830; color: #e8e8e8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 60px 20px; }
+h1 { font-size: 24px; font-weight: 700; color: #f0a500; letter-spacing: 1px; margin-bottom: 6px; }
+.sub { font-size: 13px; color: #8899bb; margin-bottom: 40px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; max-width: 900px; width: 100%; }
+.card { background: #1a2a4a; border: 1px solid #253a5a; border-radius: 12px; padding: 24px; transition: all 0.2s; text-decoration: none; color: inherit; display: block; }
+.card:hover { border-color: #f0a500; transform: translateY(-2px); }
+.card h2 { font-size: 16px; font-weight: 700; color: #f0a500; margin-bottom: 8px; }
+.card p { font-size: 13px; color: #8899bb; line-height: 1.5; margin-bottom: 12px; }
+.card .badge { font-size: 10px; padding: 3px 10px; border-radius: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; }
+.badge-live { background: rgba(77,255,136,0.15); color: #4dff88; }
+.badge-soon { background: rgba(240,165,0,0.15); color: #f0a500; }
+.footer { margin-top: 60px; font-size: 11px; color: #3a4a6a; text-align: center; }
+</style>
+</head>
+<body>
+<h1>DNT HOME BUYERS</h1>
+<p class="sub">Team Dashboards — live data from Google Sheets</p>
+<div class="cards">
+  <a class="card" href="kpi.html">
+    <h2>Weekly KPIs</h2>
+    <p>Records, leads, funnel, acquisitions, calling activity, and diagnostics. Week-over-week trends with auto-refresh from the KPI Tracker sheet.</p>
+    <span class="badge badge-live">Live</span>
+  </a>
+  <div class="card" style="cursor: default; opacity: 0.5;">
+    <h2>Unit Economics</h2>
+    <p>Cost per lead, cost per contract, channel ROI, and funnel analysis across all marketing channels.</p>
+    <span class="badge badge-soon">Coming Soon</span>
+  </div>
+  <div class="card" style="cursor: default; opacity: 0.5;">
+    <h2>Properties Pipeline</h2>
+    <p>Active deals across stages — from lead through closing. Loan draws, contractor status, and project timelines.</p>
+    <span class="badge badge-soon">Coming Soon</span>
+  </div>
+</div>
+<div class="footer">DNT Home Buyers &middot; Powered by Google Sheets &middot; Read-only team views</div>
+</body>
+</html>
