@@ -313,8 +313,8 @@ const DEFAULT_MARKETING = {
 
 const DEFAULT_KPI = {
   weeks: [{ wk:"YTD", nicheRec:2126, bulkRec:32144, dmRec:15224, websiteRec:0, nicheLeads:76, bulkLeads:120, dmLeads:9, websiteLeads:15, newLeads:220, unqualified:0, qualified:165, notInterested:0, ghosting:0, deadLeads:0, lostDeals:0, offersMade:95, apptsSet:29, apptsRan:29, contracts:3, closed:2, nicheContracts:0, bulkContracts:1, dmContracts:2, websiteContracts:0, nicheClosed:0, bulkClosed:0, dmClosed:2, websiteClosed:0, hotUwStale:0, activeLmQ:0, rm_dials:0, rm_connects:0, sp_txtSent:0, sp_txtRecv:0, inboundCalls:0 }],
-  totals: { nicheRec:2126, bulkRec:32144, dmRec:15224, websiteRec:0, nicheLeads:76, bulkLeads:120, dmLeads:9, websiteLeads:15, newLeads:220, unqualified:0, qualified:165, notInterested:0, ghosting:0, deadLeads:0, lostDeals:0, offersMade:95, apptsSet:29, apptsRan:29, contracts:3, closed:2, nicheContracts:0, bulkContracts:1, dmContracts:2, websiteContracts:0, nicheClosed:0, bulkClosed:0, dmClosed:2, websiteClosed:0, hotUwStale:0, activeLmQ:0, rm_dials:0, rm_connects:0, sp_txtSent:0, sp_txtRecv:0, inboundCalls:0, totalRecords:49494, totalLeads:220, totalFunnel:385, qualRate:0.429, deadTotal:0, apptRate:0.305, showRate:1.0, contractsTotal:3, closedTotal:2 },
-  recordsByChannel: { "Bulk Calling":32144, "Niche Calling":2126, "Direct Mail":15224, "Website/SEO":0 },
+  totals: { nicheRec:2126, bulkRec:32144, dmRec:15224, websiteRec:0, nicheLeads:76, bulkLeads:120, dmLeads:9, websiteLeads:15, newLeads:220, unqualified:0, qualified:165, notInterested:0, ghosting:0, deadLeads:0, lostDeals:0, offersMade:95, apptsSet:29, apptsRan:29, contracts:3, closed:2, nicheContracts:0, bulkContracts:1, dmContracts:2, websiteContracts:0, nicheClosed:0, bulkClosed:0, dmClosed:2, websiteClosed:0, hotUwStale:0, activeLmQ:0, rm_dials:0, rm_connects:0, sp_txtSent:0, sp_txtRecv:0, inboundCalls:0, weeklyRecordSum:49494, totalRecords:47346, totalLeads:220, totalFunnel:385, qualRate:0.429, deadTotal:0, apptRate:0.305, showRate:1.0, contractsTotal:3, closedTotal:2 },
+  recordsByChannel: { "Bulk Calling":40450, "Niche Calling":2585, "Direct Mail":4311 },
   leadsByChannel: { "Bulk Calling":120, "Niche Calling":76, "Direct Mail":9, "Website/SEO":15 },
   contractsByChannel: { "Bulk Calling":1, "Niche Calling":0, "Direct Mail":2, "Website/SEO":0 },
   closedByChannel: { "Bulk Calling":0, "Niche Calling":0, "Direct Mail":2, "Website/SEO":0 }
@@ -394,6 +394,12 @@ function processTransactions(rows) {
   };
 }
 
+// === UNIVERSE SIZES (actual tagged records in Sift, not cumulative weekly sums) ===
+// "Ready for Niche" = 2,585 | "Ready for Bulk" = 40,450 | "Ready for Direct Mail" = 4,311
+// Website/SEO has no outbound record universe — inbound leads only.
+const UNIVERSE_SIZES = { niche: 2585, bulk: 40450, dm: 4311 };
+const UNIVERSE_TOTAL = UNIVERSE_SIZES.niche + UNIVERSE_SIZES.bulk + UNIVERSE_SIZES.dm; // 47,346
+
 const KPI_FIELDS = ["nicheRec","bulkRec","dmRec","websiteRec",
                     "nicheLeads","bulkLeads","dmLeads","websiteLeads",
                     "newLeads","unqualified","qualified",
@@ -408,7 +414,9 @@ const KPI_FIELDS = ["nicheRec","bulkRec","dmRec","websiteRec",
 function aggregateKpiTotals(weeks) {
   const t = {};
   KPI_FIELDS.forEach(f => { t[f] = weeks.reduce((s,w)=>s+(Number(w[f])||0),0); });
-  t.totalRecords = (t.nicheRec||0)+(t.bulkRec||0)+(t.dmRec||0)+(t.websiteRec||0);
+  // Weekly sums kept for per-week charts; cumulative total uses Sift universe sizes
+  t.weeklyRecordSum = (t.nicheRec||0)+(t.bulkRec||0)+(t.dmRec||0)+(t.websiteRec||0);
+  t.totalRecords = UNIVERSE_TOTAL;
   t.totalLeads   = (t.nicheLeads||0)+(t.bulkLeads||0)+(t.dmLeads||0)+(t.websiteLeads||0);
   t.totalFunnel  = (t.newLeads||0)+(t.unqualified||0)+(t.qualified||0);
   t.qualRate     = t.totalFunnel > 0 ? t.qualified / t.totalFunnel : 0;
@@ -424,7 +432,8 @@ function aggregateKpiTotals(weeks) {
 
 function buildChannelMaps(t) {
   return {
-    recordsByChannel:   { "Bulk Calling": t.bulkRec||0, "Niche Calling": t.nicheRec||0, "Direct Mail": t.dmRec||0, "Website/SEO": t.websiteRec||0 },
+    // Records use Sift universe sizes, NOT cumulative weekly sums. Website/SEO excluded (inbound only).
+    recordsByChannel:   { "Bulk Calling": UNIVERSE_SIZES.bulk, "Niche Calling": UNIVERSE_SIZES.niche, "Direct Mail": UNIVERSE_SIZES.dm },
     leadsByChannel:     { "Bulk Calling": t.bulkLeads||0, "Niche Calling": t.nicheLeads||0, "Direct Mail": t.dmLeads||0, "Website/SEO": t.websiteLeads||0 },
     contractsByChannel: { "Bulk Calling": t.bulkContracts||0, "Niche Calling": t.nicheContracts||0, "Direct Mail": t.dmContracts||0, "Website/SEO": t.websiteContracts||0 },
     closedByChannel:    { "Bulk Calling": t.bulkClosed||0, "Niche Calling": t.nicheClosed||0, "Direct Mail": t.dmClosed||0, "Website/SEO": t.websiteClosed||0 }
@@ -612,8 +621,8 @@ function renderTiles() {
   }
 
   document.getElementById("tileCpl").innerHTML = `<div class="label">COST PER LEAD PUSHED</div><div class="value v-cyan">${cpl !== null ? fmt$(cpl) : "—"}</div><div class="sub">${leads ? fmtN(leads) + " leads · " + fmt$k(spend) + " marketing" : "Need spend + leads pushed"}</div>`;
-  document.getElementById("tileCpr").innerHTML = `<div class="label">COST PER RECORD</div><div class="value v-blue">${cpr !== null ? fmt$(cpr) : "—"}</div><div class="sub">${records ? fmtN(records) + " records pulled" : "Need records"}</div>`;
-  document.getElementById("tileLeadConv").innerHTML = `<div class="label">RECORDS → LEADS</div><div class="value v-green">${records > 0 ? fmtPct(recToLead) : "—"}</div><div class="sub">Blended; per-channel below</div>`;
+  document.getElementById("tileCpr").innerHTML = `<div class="label">COST PER RECORD</div><div class="value v-blue">${cpr !== null ? fmt$(cpr) : "—"}</div><div class="sub">${records ? fmtN(records) + " universe (Sift tags)" : "Need records"}</div>`;
+  document.getElementById("tileLeadConv").innerHTML = `<div class="label">UNIVERSE → LEADS</div><div class="value v-green">${records > 0 ? fmtPct(recToLead) : "—"}</div><div class="sub">Blended across Niche / Bulk / DM</div>`;
   document.getElementById("tileTopChannel").innerHTML = `<div class="label">CHEAPEST CHANNEL (CPL)</div><div class="value v-purple">${topChannel || "—"}</div><div class="sub">${topChannel ? fmt$(topCpl) + " per lead" : "Need both data sources"}</div>`;
 
   const t = kpi ? kpi.totals : {};
@@ -644,7 +653,7 @@ function renderFunnel() {
   if (!kpi) { container.innerHTML = `<div style="padding:20px; text-align:center; color:#6b7894; font-size:12px;">Load KPI data to see the funnel.</div>`; leakEl.innerHTML = `<div style="padding:20px; text-align:center; color:#6b7894; font-size:12px;">—</div>`; return; }
   const t = kpi.totals;
   const stages = [
-    { name: "RECORDS",      value: t.totalRecords, color: "#4dd0e1" },
+    { name: "UNIVERSE",      value: t.totalRecords, color: "#4dd0e1" },
     { name: "LEADS PUSHED", value: t.totalLeads,   color: "#5b8def" },
     { name: "NEW LEADS",    value: t.newLeads,     color: "#38bdf8" },
     { name: "UNQUALIFIED",  value: t.unqualified,  color: "#a78bfa" },
@@ -679,7 +688,7 @@ function renderFunnel() {
       <div style="font-family:'SF Mono',monospace; font-size:24px; color:#f87171; font-weight:700; margin-bottom:8px;">${(worst.rate*100).toFixed(1)}%</div>
       <div style="font-size:11px; color:#8a96b0; line-height:1.5; margin-bottom:16px;">Only ${fmtN(worst.value)} of ${fmtN(worst.prev)} made it through. Improving by 10 points compounds downstream.</div>
       <div style="padding-top:14px; border-top:1px solid #1c2538;">
-        <div style="font-family:'SF Mono',monospace; font-size:10px; color:#6b7894; letter-spacing:1.5px; margin-bottom:6px;">RECORDS → CLOSED</div>
+        <div style="font-family:'SF Mono',monospace; font-size:10px; color:#6b7894; letter-spacing:1.5px; margin-bottom:6px;">UNIVERSE → CLOSED</div>
         <div style="font-family:'SF Mono',monospace; font-size:20px; color:#d4a82c; font-weight:700;">${(recsToCloseRate*100).toFixed(2)}%</div>
         <div style="font-size:11px; color:#8a96b0; margin-top:4px;">${fmtN(t.totalRecords)} in · ${fmtN(t.closedTotal)} out</div>
       </div>`;
@@ -688,12 +697,13 @@ function renderFunnel() {
 
 function renderRecordsChart() {
   const kpi = state.kpi; if (!kpi) return;
-  const channels = ["Bulk Calling","Niche Calling","Direct Mail","Website/SEO"];
+  // Website/SEO excluded — no outbound record universe (inbound leads only)
+  const recChannels = ["Bulk Calling","Niche Calling","Direct Mail"];
   charts.records = new Chart(document.getElementById("recordsChart"), {
     type: "bar",
-    data: { labels: channels, datasets: [
-      { label: "Records Pulled", data: channels.map(c => kpi.recordsByChannel[c]||0), backgroundColor: channels.map(c => CHANNEL_COLORS[c]||"#8a96b0"), borderRadius: 6 },
-      { label: "Leads Pushed",   data: channels.map(c => kpi.leadsByChannel[c]||0),   backgroundColor: channels.map(c => (CHANNEL_COLORS[c]||"#8a96b0")+"99"), borderRadius: 6 }
+    data: { labels: recChannels, datasets: [
+      { label: "Universe Size", data: recChannels.map(c => kpi.recordsByChannel[c]||0), backgroundColor: recChannels.map(c => CHANNEL_COLORS[c]||"#8a96b0"), borderRadius: 6 },
+      { label: "Leads Pushed",  data: recChannels.map(c => kpi.leadsByChannel[c]||0),   backgroundColor: recChannels.map(c => (CHANNEL_COLORS[c]||"#8a96b0")+"99"), borderRadius: 6 }
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -732,7 +742,7 @@ function renderUnitEconTable() {
   const totRec = rows.reduce((s,r)=>s+(r.records||0),0);
   const totLeads = rows.reduce((s,r)=>s+(r.leads||0),0);
   const totContracts = rows.reduce((s,r)=>s+(r.contracts||0),0);
-  let html = `<thead><tr><th class="left">CHANNEL</th><th>SPEND</th><th>RECORDS</th><th>LEADS</th><th>CONV %</th><th>CPR</th><th>CPL</th><th>CONTRACTS</th><th>$/CONTRACT</th><th>ROI</th></tr></thead><tbody>`;
+  let html = `<thead><tr><th class="left">CHANNEL</th><th>SPEND</th><th>UNIVERSE</th><th>LEADS</th><th>CONV %</th><th>CPR</th><th>CPL</th><th>CONTRACTS</th><th>$/CONTRACT</th><th>ROI</th></tr></thead><tbody>`;
   html += rows.map(r => `
     <tr>
       <td class="left"><span style="display:inline-block;width:10px;height:10px;background:${CHANNEL_COLORS[r.ch]||'#8a96b0'};border-radius:2px;margin-right:8px;"></span>${r.ch}</td>
@@ -756,21 +766,22 @@ function renderUnitEconTable() {
 
 function renderCPLChart() {
   const mkt = state.marketing, kpi = state.kpi; if (!mkt || !kpi) return;
-  const channels = ["Bulk Calling","Niche Calling","Direct Mail","Website/SEO"];
-  const cplVals = channels.map(ch => { const s = mkt.byChannel[ch] || 0; const l = kpi.leadsByChannel[ch] || 0; return l > 0 ? +(s/l).toFixed(2) : 0; });
+  const cplChannels = ["Bulk Calling","Niche Calling","Direct Mail","Website/SEO"];
+  const cplVals = cplChannels.map(ch => { const s = mkt.byChannel[ch] || 0; const l = kpi.leadsByChannel[ch] || 0; return l > 0 ? +(s/l).toFixed(2) : 0; });
   charts.cpl = new Chart(document.getElementById("cplChart"), {
     type: "bar",
-    data: { labels: channels, datasets: [{ label: "Cost per Lead Pushed", data: cplVals, backgroundColor: channels.map(c => CHANNEL_COLORS[c] || "#8a96b0"), borderRadius: 6 }] },
+    data: { labels: cplChannels, datasets: [{ label: "Cost per Lead Pushed", data: cplVals, backgroundColor: cplChannels.map(c => CHANNEL_COLORS[c] || "#8a96b0"), borderRadius: 6 }] },
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { backgroundColor: "#0a0e1a", borderColor: "#2a3651", borderWidth: 1, titleColor: "#fff", bodyColor: "#c9d4e8", padding: 12, callbacks: { label: c => "CPL: " + fmt$(c.raw) } } },
       scales: { x: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 } }, grid: { display: false } },
                 y: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 }, callback: v => fmt$(v) }, grid: { color: "#1c2538" } } }
     }
   });
-  const cprVals = channels.map(ch => { const s = mkt.byChannel[ch] || 0; const r = kpi.recordsByChannel[ch] || 0; return r > 0 ? +(s/r).toFixed(2) : 0; });
+  const cprChannels = ["Bulk Calling","Niche Calling","Direct Mail"];
+  const cprVals = cprChannels.map(ch => { const s = mkt.byChannel[ch] || 0; const r = kpi.recordsByChannel[ch] || 0; return r > 0 ? +(s/r).toFixed(2) : 0; });
   charts.cpr = new Chart(document.getElementById("cprChart"), {
     type: "bar",
-    data: { labels: channels, datasets: [{ label: "Cost per Record", data: cprVals, backgroundColor: channels.map(c => (CHANNEL_COLORS[c]||"#8a96b0")+"99"), borderRadius: 6 }] },
+    data: { labels: cprChannels, datasets: [{ label: "Cost per Record", data: cprVals, backgroundColor: cprChannels.map(c => (CHANNEL_COLORS[c]||"#8a96b0")+"99"), borderRadius: 6 }] },
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { backgroundColor: "#0a0e1a", borderColor: "#2a3651", borderWidth: 1, titleColor: "#fff", bodyColor: "#c9d4e8", padding: 12, callbacks: { label: c => "Cost per Record: " + fmt$(c.raw) } } },
       scales: { x: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 } }, grid: { display: false } },
@@ -800,7 +811,7 @@ function renderBreakeven() {
   if (closedProjectedAnnual !== null) {
     narr.innerHTML = gap >= 0
       ? `Current pace: ${closedSoFar} closes in ${daysCovered} days → projected <strong style="color:#4ade80;">${closedProjectedAnnual} deals this year</strong>. Break-even at ${fmt$k(dealSize)}/deal is ${dealsNeededAnnual}. Ahead by ${gap} → about <strong style="color:#4ade80;">${fmt$k(gap * dealSize)}</strong> projected surplus.`
-      : `Projected <strong style="color:#fb923c;">${closedProjectedAnnual} deals</strong> against break-even of <strong>${dealsNeededAnnual}</strong>. Levers: cut spend, improve conversion (records→closed is ${((kpi.totals.closedTotal/Math.max(1,kpi.totals.totalRecords))*100).toFixed(2)}%), or raise avg deal size from ${fmt$k(dealSize)} to ${fmt$k(runRate/Math.max(1,closedProjectedAnnual))}.`;
+      : `Projected <strong style="color:#fb923c;">${closedProjectedAnnual} deals</strong> against break-even of <strong>${dealsNeededAnnual}</strong>. Levers: cut spend, improve conversion (universe→closed is ${((kpi.totals.closedTotal/Math.max(1,kpi.totals.totalRecords))*100).toFixed(2)}%), or raise avg deal size from ${fmt$k(dealSize)} to ${fmt$k(runRate/Math.max(1,closedProjectedAnnual))}.`;
   } else { narr.innerHTML = "Load KPI data to see projected pace and gap analysis."; }
   if (kpi) {
     const scenarios = [
@@ -859,7 +870,7 @@ function renderInsights() {
   const apptToContract = appts > 0 ? contracts / appts : 0;
   const contractToClose = contracts > 0 ? closed / contracts : 0;
   const funnelStages = [
-    { name: "Records", val: records, next: leads, nextName: "Leads" },
+    { name: "Universe", val: records, next: leads, nextName: "Leads" },
     { name: "Leads", val: leads, next: qualified, nextName: "Qualified" },
     { name: "Qualified", val: qualified, next: offers, nextName: "Offers" },
     { name: "Offers", val: offers, next: appts, nextName: "Appts" },
