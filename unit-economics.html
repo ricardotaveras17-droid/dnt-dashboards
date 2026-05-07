@@ -497,7 +497,7 @@ function processAttribution(rows) {
 // === JSONP LOADER (Google Visualization API — same as KPI dashboard) ===
 const SHEET_ID = '1qc1mcyI8lY7wXRssNTbgJzez0eOz06qmmeMsiMcPb9U';
 const SHEET_NAME = 'Weekly Log';
-const JSONP_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(SHEET_NAME);
+const JSONP_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?sheet=' + encodeURIComponent(SHEET_NAME);
 
 const COLS_MAP = ['wk','nicheRec','bulkRec','dmRec','websiteRec','nicheLeads','bulkLeads','dmLeads','websiteLeads','newLeads','unqualified','qualified','notInterested','ghosting','deadLeads','lostDeals','offersMade','apptsSet','apptsRan','contracts','closed','nicheContracts','bulkContracts','dmContracts','websiteContracts','nicheClosed','bulkClosed','dmClosed','websiteClosed','dmCost','hotUwStale','activeLmQ','sp_cleton_out','sp_cleton_dial','sp_rachelle_out','sp_rachelle_dial','sp_joey_out','sp_joey_dial','sp_beatriz_out','sp_beatriz_dial','sp_sefora_out','sp_sefora_dial','sp_txtSent','sp_txtRecv','inboundCalls','rm_dials','rm_connects','rm_notAvailVM','rm_notInterested','rm_wrongNum','rm_dnc','rm_newLead','rm_spanish','rm_followUp','rm_sold'];
 
@@ -540,7 +540,7 @@ function loadKpiFromSheet() {
         else resolve(false);
       } catch (err) { console.error('Sheet parse error:', err); resolve(false); }
     };
-    script.src = JSONP_URL + '&tqx=responseHandler:__ueGvizCb';
+    script.src = JSONP_URL + '&tqx=out:json;responseHandler:__ueGvizCb';
     document.body.appendChild(script);
   });
 }
