@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNT Home Buyers â Weekly KPIs</title>
+<style>
+:root { color-scheme: light; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: #0c1830; color: #e8e8e8; min-height: 100vh; }
+
+.top-bar { background: linear-gradient(135deg, #0c1830 0%, #1a2a4a 100%); padding: 20px 24px 14px; border-bottom: 2px solid #f0a500; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 8px; }
+.top-bar h1 { font-size: 18px; font-weight: 700; color: #f0a500; letter-spacing: 1px; }
+.top-bar .sub { font-size: 12px; color: #8899bb; margin-top: 2px; }
+.top-bar .week-pick { display: flex; align-items: center; gap: 8px; }
+.top-bar select { padding: 6px 10px; background: #0c1830; border: 1px solid #253a5a; border-radius: 4px; color: #e8e8e8; font-size: 13px; font-weight: 600; }
+.top-bar select:focus { outline: none; border-color: #f0a500; }
+.refresh-btn { padding: 6px 14px; background: transparent; border: 1px solid #f0a500; color: #f0a500; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+.refresh-btn:hover { background: #f0a500; color: #0c1830; }
+
+.content { padding: 16px 24px 40px; max-width: 1200px; margin: 0 auto; }
+
+.section-title { font-size: 13px; font-weight: 700; color: #f0a500; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.section-title.cyan { color: #4dc9f6; }
+.section-title.green { color: #4dff88; }
+.section-title.purple { color: #a78bfa; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.kpi-card { background: #1a2a4a; border-radius: 8px; padding: 14px; border: 1px solid #253a5a; }
+.kpi-card:hover { border-color: #f0a500; }
+.kpi-card .label { font-size: 10px; color: #8899bb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.kpi-card .value { font-size: 24px; font-weight: 700; color: #fff; font-family: 'Courier New', monospace; }
+.kpi-card .value.gold { color: #f0a500; }
+.kpi-card .value.cyan { color: #4dc9f6; }
+.kpi-card .value.green { color: #4dff88; }
+.kpi-card .value.red { color: #ff4d4d; }
+.kpi-card .detail { font-size: 10px; color: #8899bb; margin-top: 4px; }
+.kpi-card .change { font-size: 10px; margin-top: 4px; }
+.kpi-card .change.up { color: #4dff88; }
+.kpi-card .change.down { color: #ff4d4d; }
+
+.wow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.wow-card { background: #1a2a4a; border-radius: 8px; padding: 14px; border: 1px solid #253a5a; }
+.wow-card .label { font-size: 10px; color: #8899bb; text-transform: uppercase; margin-bottom: 8px; }
+.wow-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.wow-bar .wk { font-size: 10px; color: #6b7b9b; width: 30px; text-align: right; }
+.wow-bar .bar-bg { flex: 1; height: 8px; background: #0c1830; border-radius: 4px; overflow: hidden; }
+.wow-bar .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.wow-bar .bar-val { font-size: 11px; color: #e8e8e8; font-family: 'Courier New', monospace; width: 50px; }
+
+.loading { text-align: center; padding: 80px 20px; }
+.loading .spinner { display: inline-block; width: 40px; height: 40px; border: 3px solid #253a5a; border-top-color: #f0a500; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading p { color: #8899bb; margin-top: 16px; font-size: 14px; }
+
+.error-box { background: rgba(255,77,77,0.1); border: 1px solid #ff4d4d; border-radius: 8px; padding: 20px; margin: 40px auto; max-width: 600px; text-align: center; }
+.error-box h3 { color: #ff4d4d; margin-bottom: 8px; }
+.error-box p { color: #8899bb; font-size: 13px; line-height: 1.6; }
+
+.footer { text-align: center; padding: 20px; font-size: 11px; color: #3a4a6a; border-top: 1px solid #1a2a4a; margin-top: 20px; }
+
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .wow-grid { grid-template-columns: 1fr; }
+  .top-bar { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <h1>DNT HOME BUYERS â WEEKLY KPIs</h1>
+    <div class="sub" id="statusLine">Loading data from Google Sheet...</div>
+  </div>
+  <div class="week-pick">
+    <select id="weekSelect"></select>
+    <button class="refresh-btn" onclick="loadData()">Refresh</button>
+  </div>
+</div>
+
+<div class="content" id="main">
+  <div class="loading" id="loader">
+    <div class="spinner"></div>
+    <p>Pulling latest numbers from the KPI Tracker...</p>
+  </div>
+</div>
+
+<div class="footer">DNT Home Buyers &middot; Auto-refreshes from KPI Tracker Google Sheet &middot; Read-only team view</div>
+
+<script>
+(function() {
+  // === CONFIG ===
+  var SHEET_ID = '1qc1mcyI8lY7wXRssNTbgJzez0eOz06qmmeMsiMcPb9U';
+  var SHEET_NAME = 'Weekly Log';
+  // Use Google Visualization JSONP endpoint â works from file:// (no CORS)
+  var JSONP_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(SHEET_NAME);
+
+  // Column order from the Weekly Log header row
+  var COLS = ['wk','nicheRec','bulkRec','dmRec','websiteRec','nicheLeads','bulkLeads','dmLeads','websiteLeads','newLeads','unqualified','qualified','notInterested','ghosting','deadLeads','lostDeals','offersMade','apptsSet','apptsRan','contracts','closed','nicheContracts','bulkContracts','dmContracts','websiteContracts','nicheClosed','bulkClosed','dmClosed','websiteClosed','dmCost','hotUwStale','activeLmQ','sp_cleton_out','sp_cleton_dial','sp_rachelle_out','sp_rachelle_dial','sp_joey_out','sp_joey_dial','sp_beatriz_out','sp_beatriz_dial','sp_sefora_out','sp_sefora_dial','sp_txtSent','sp_txtRecv','inboundCalls','rm_dials','rm_connects','rm_notAvailVM','rm_notInterested','rm_wrongNum','rm_dnc','rm_newLead','rm_spanish','rm_followUp','rm_sold'];
+
+  var allWeeks = {}; // wk# -> data object
+
+  // === HELPERS ===
+  function num(v) { if (v == null || v === '') return 0; var n = parseFloat(String(v).replace(/[$,%]/g, '').replace(/,/g, '')); return isNaN(n) ? 0 : n; }
+  function fmt(n) { if (n == null) return 'â'; return n.toLocaleString('en-US', {maximumFractionDigits: 0}); }
+  function pct(n) { return n.toFixed(1) + '%'; }
+  function dollar(n) { return '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+
+  // Data loading uses JSONP via Google Visualization API (no CORS issues)
+
+  // === CALC derived metrics from raw week data ===
+  function calc(d) {
+    var totalRec = num(d.nicheRec) + num(d.bulkRec) + num(d.dmRec) + num(d.websiteRec);
+    var totalLeads = num(d.nicheLeads) + num(d.bulkLeads) + num(d.dmLeads) + num(d.websiteLeads);
+    var recToLead = totalRec > 0 ? (totalLeads / totalRec) * 100 : 0;
+    var totalFunnel = num(d.newLeads) + num(d.unqualified) + num(d.qualified);
+    var qualRate = totalFunnel > 0 ? (num(d.qualified) / totalFunnel) * 100 : 0;
+    var apptRate = num(d.offersMade) > 0 ? (num(d.apptsSet) / num(d.offersMade)) * 100 : 0;
+    var showRate = num(d.apptsSet) > 0 ? (num(d.apptsRan) / num(d.apptsSet)) * 100 : 0;
+    var costPerPiece = num(d.dmRec) > 0 ? num(d.dmCost) / num(d.dmRec) : 0;
+    var dmResponseRate = num(d.dmRec) > 0 ? (num(d.dmLeads) / num(d.dmRec)) * 100 : 0;
+
+    var spOut = num(d.sp_cleton_out) + num(d.sp_rachelle_out) + num(d.sp_joey_out) + num(d.sp_beatriz_out) + num(d.sp_sefora_out);
+    var spDial = num(d.sp_cleton_dial) + num(d.sp_rachelle_dial) + num(d.sp_joey_dial) + num(d.sp_beatriz_dial) + num(d.sp_sefora_dial);
+    var rmDials = num(d.rm_dials);
+    var rmConnects = num(d.rm_connects);
+    var rmConnectRate = rmDials > 0 ? (rmConnects / rmDials) * 100 : 0;
+    var totalDials = spOut + spDial + rmDials;
+
+    var contractsTotal = num(d.nicheContracts) + num(d.bulkContracts) + num(d.dmContracts) + num(d.websiteContracts);
+    if (contractsTotal === 0) contractsTotal = num(d.contracts);
+    var closedTotal = num(d.nicheClosed) + num(d.bulkClosed) + num(d.dmClosed) + num(d.websiteClosed);
+    if (closedTotal === 0) closedTotal = num(d.closed);
+
+    return {
+      totalRec: totalRec, totalLeads: totalLeads, recToLead: recToLead,
+      totalFunnel: totalFunnel, qualRate: qualRate,
+      apptRate: apptRate, showRate: showRate,
+      costPerPiece: costPerPiece, dmResponseRate: dmResponseRate,
+      spOut: spOut, spDial: spDial, rmDials: rmDials, rmConnects: rmConnects,
+      rmConnectRate: rmConnectRate, totalDials: totalDials,
+      contractsTotal: contractsTotal, closedTotal: closedTotal
+    };
+  }
+
+  // === BUILD KPI CARD ===
+  function card(label, value, format, detailText, changeVal) {
+    var colorClass = '';
+    var displayVal = '';
+    if (format === 'pct') { displayVal = pct(value); colorClass = value >= 30 ? 'green' : value > 0 ? '' : ''; }
+    else if (format === '$') { displayVal = dollar(value); colorClass = 'gold'; }
+    else { displayVal = fmt(value); }
+
+    var changeHtml = '';
+    if (changeVal != null && changeVal !== 0) {
+      var dir = changeVal > 0 ? 'up' : 'down';
+      var arrow = changeVal > 0 ? 'â²' : 'â¼';
+      changeHtml = '<div class="change ' + dir + '">' + arrow + ' ' + Math.abs(changeVal).toFixed(1) + '% vs prior week</div>';
+    }
+
+    return '<div class="kpi-card"><div class="label">' + label + '</div><div class="value ' + colorClass + '">' + displayVal + '</div>' +
+      (detailText ? '<div class="detail">' + detailText + '</div>' : '') + changeHtml + '</div>';
+  }
+
+  // === COMPUTE WEEK-OVER-WEEK CHANGE ===
+  function wow(curr, prev) {
+    if (prev === 0 || prev == null) return null;
+    return ((curr - prev) / prev) * 100;
+  }
+
+  // === RENDER ===
+  function render(weekNum) {
+    var d = allWeeks[weekNum];
+    if (!d) { document.getElementById('main').innerHTML = '<div class="error-box"><h3>No Data</h3><p>Week ' + weekNum + ' has no data yet.</p></div>'; return; }
+    var c = calc(d);
+
+    // Find prior week for WoW
+    var priorWeek = null;
+    var sortedWeeks = Object.keys(allWeeks).map(Number).sort(function(a,b){return a-b;});
+    var idx = sortedWeeks.indexOf(weekNum);
+    if (idx > 0) priorWeek = allWeeks[sortedWeeks[idx - 1]];
+    var pc = priorWeek ? calc(priorWeek) : null;
+
+    var html = '';
+
+    // RECORDS
+    html += '<div class="section-title">Week ' + weekNum + ' â Records / Mail Sent</div>';
+    html += '<div class="kpi-grid">';
+    html += card('Niche Records', num(d.nicheRec), 'num', null, pc ? wow(num(d.nicheRec), num(priorWeek.nicheRec)) : null);
+    html += card('Bulk Records', num(d.bulkRec), 'num', null, pc ? wow(num(d.bulkRec), num(priorWeek.bulkRec)) : null);
+    html += card('DM Pieces', num(d.dmRec), 'num', c.costPerPiece > 0 ? dollar(c.costPerPiece) + '/piece' : null, pc ? wow(num(d.dmRec), num(priorWeek.dmRec)) : null);
+    html += card('Website', num(d.websiteRec), 'num');
+    html += card('Total Records', c.totalRec, 'num', null, pc ? wow(c.totalRec, pc.totalRec) : null);
+    if (num(d.dmCost) > 0) html += card('DM Cost', num(d.dmCost), '$');
+    html += '</div>';
+
+    // LEADS
+    html += '<div class="section-title cyan">Leads / Responses (â Sift)</div>';
+    html += '<div class="kpi-grid">';
+    html += card('Niche Leads', num(d.nicheLeads), 'num', num(d.nicheRec) > 0 ? pct((num(d.nicheLeads)/num(d.nicheRec))*100) + ' of records' : null);
+    html += card('Bulk Leads', num(d.bulkLeads), 'num', num(d.bulkRec) > 0 ? pct((num(d.bulkLeads)/num(d.bulkRec))*100) + ' of records' : null);
+    html += card('DM Responses', num(d.dmLeads), 'num', c.dmResponseRate > 0 ? pct(c.dmResponseRate) + ' response rate' : null);
+    html += card('Website Leads', num(d.websiteLeads), 'num');
+    html += card('Total Leads', c.totalLeads, 'num', c.recToLead > 0 ? pct(c.recToLead) + ' blended' : null, pc ? wow(c.totalLeads, pc.totalLeads) : null);
+    html += '</div>';
+
+    // FUNNEL
+    html += '<div class="section-title">Lead Funnel (Sift)</div>';
+    html += '<div class="kpi-grid">';
+    html += card('New Leads', num(d.newLeads), 'num');
+    html += card('Unqualified', num(d.unqualified), 'num');
+    html += card('Qualified', num(d.qualified), 'num', c.qualRate > 0 ? pct(c.qualRate) + ' qual rate' : null);
+    html += card('Not Interested', num(d.notInterested), 'num');
+    html += card('Ghosting', num(d.ghosting), 'num');
+    html += card('Dead Leads', num(d.deadLeads), 'num');
+    html += card('Lost Deals', num(d.lostDeals), 'num');
+    html += '</div>';
+
+    // ACQUISITIONS
+    html += '<div class="section-title green">Acquisitions</div>';
+    html += '<div class="kpi-grid">';
+    html += card('Offers Made', num(d.offersMade), 'num');
+    html += card('Appts Set', num(d.apptsSet), 'num', c.apptRate > 0 ? pct(c.apptRate) + ' of offers' : null);
+    html += card('Appts Ran', num(d.apptsRan), 'num');
+    html += card('Show Rate', c.showRate, 'pct');
+    html += card('Contracts', c.contractsTotal, 'num');
+    html += card('Closed', c.closedTotal, 'num');
+    html += '</div>';
+
+    // CALLING ACTIVITY
+    html += '<div class="section-title purple">Calling Activity</div>';
+    html += '<div class="kpi-grid">';
+    html += card('RM Dials', c.rmDials, 'num', null, pc ? wow(c.rmDials, pc.rmDials) : null);
+    html += card('RM Connects', c.rmConnects, 'num', c.rmConnectRate > 0 ? pct(c.rmConnectRate) + ' connect rate' : null);
+    html += card('SP Outbound', c.spOut, 'num', null, pc ? wow(c.spOut, pc.spOut) : null);
+    html += card('SP Dialer', c.spDial, 'num');
+    html += card('Texts Sent', num(d.sp_txtSent), 'num');
+    html += card('Texts Received', num(d.sp_txtRecv), 'num');
+    html += card('Inbound Calls', num(d.inboundCalls), 'num');
+    html += card('Grand Total Dials', c.totalDials, 'num');
+    html += '</div>';
+
+    // DIAGNOSTICS
+    html += '<div class="section-title">Diagnostics</div>';
+    html += '<div class="kpi-grid">';
+    html += card('Hot/UW Stale 14d+', num(d.hotUwStale), 'num');
+    html += card('Active LM Queue', num(d.activeLmQ), 'num');
+    html += '</div>';
+
+    // WEEK-OVER-WEEK MINI BARS (last 4 weeks)
+    var recentWeeks = sortedWeeks.slice(-4);
+    if (recentWeeks.length >= 2) {
+      html += '<div class="section-title cyan">Week-over-Week Trends (Last ' + recentWeeks.length + ' Weeks)</div>';
+      html += '<div class="wow-grid">';
+      var metrics = [
+        {label: 'Total Records', fn: function(w){return calc(allWeeks[w]).totalRec;}},
+        {label: 'Total Leads', fn: function(w){return calc(allWeeks[w]).totalLeads;}},
+        {label: 'Offers Made', fn: function(w){return num(allWeeks[w].offersMade);}},
+        {label: 'RM Dials', fn: function(w){return num(allWeeks[w].rm_dials);}},
+        {label: 'SP Outbound', fn: function(w){return calc(allWeeks[w]).spOut;}},
+        {label: 'Qualified', fn: function(w){return num(allWeeks[w].qualified);}}
+      ];
+      metrics.forEach(function(m) {
+        var vals = recentWeeks.map(m.fn);
+        var maxVal = Math.max.apply(null, vals.map(function(v){return v||1;}));
+        var barsHtml = '';
+        for (var i = 0; i < recentWeeks.length; i++) {
+          var pctWidth = maxVal > 0 ? (vals[i] / maxVal) * 100 : 0;
+          var isLatest = recentWeeks[i] === weekNum;
+          var barColor = isLatest ? '#f0a500' : '#4dc9f6';
+          barsHtml += '<div class="wow-bar"><span class="wk">W' + recentWeeks[i] + '</span><div class="bar-bg"><div class="bar-fill" style="width:' + pctWidth + '%;background:' + barColor + '"></div></div><span class="bar-val">' + fmt(vals[i]) + '</span></div>';
+        }
+        html += '<div class="wow-card"><div class="label">' + m.label + '</div>' + barsHtml + '</div>';
+      });
+      html += '</div>';
+    }
+
+    document.getElementById('main').innerHTML = html;
+  }
+
+  // === LOAD DATA (JSONP â works from file:// and any origin) ===
+  window._gvizCallback = function() {}; // placeholder
+  window.loadData = function() {
+    document.getElementById('main').innerHTML = '<div class="loading" id="loader"><div class="spinner"></div><p>Pulling latest numbers from the KPI Tracker...</p></div>';
+    document.getElementById('statusLine').textContent = 'Loading data from Google Sheet...';
+
+    // Remove any previous script tag
+    var old = document.getElementById('gviz-loader');
+    if (old) old.parentNode.removeChild(old);
+
+    // Use a script tag to bypass CORS (JSONP-style)
+    var script = document.createElement('script');
+    script.id = 'gviz-loader';
+    script.onerror = function() {
+      document.getElementById('main').innerHTML = '<div class="error-box"><h3>Could Not Load Data</h3><p>Failed to reach Google Sheets. Check your internet connection and make sure the sheet is published to the web.</p><p style="margin-top:12px;"><strong>File â Share â Publish to web â Entire document â Publish</strong></p></div>';
+      document.getElementById('statusLine').textContent = 'Error loading data';
+    };
+
+    // Override the google callback
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+    window.google.visualization.Query.setResponse = function(resp) {
+      try {
+        if (resp.status === 'error') throw new Error(resp.errors ? resp.errors[0].detailed_message : 'Sheet query error');
+        var table = resp.table;
+        if (!table || !table.rows) throw new Error('No table data in response.');
+
+        allWeeks = {};
+        for (var i = 0; i < table.rows.length; i++) {
+          var cells = table.rows[i].c;
+          if (!cells || !cells[0] || cells[0].v == null) continue;
+          var wk = num(cells[0].v);
+          if (wk === 0) continue;
+
+          // Check if any data cell has a value
+          var hasData = false;
+          for (var j = 1; j < cells.length; j++) {
+            if (cells[j] && cells[j].v != null && cells[j].v !== '') { hasData = true; break; }
+          }
+          if (!hasData) continue;
+
+          var obj = {};
+          for (var j = 0; j < COLS.length && j < cells.length; j++) {
+            obj[COLS[j]] = (cells[j] && cells[j].v != null) ? String(cells[j].v) : '';
+          }
+          allWeeks[wk] = obj;
+        }
+
+        var weekNums = Object.keys(allWeeks).map(Number).sort(function(a,b){return a-b;});
+        if (weekNums.length === 0) throw new Error('No filled weeks found in the sheet.');
+
+        // Populate week selector
+        var sel = document.getElementById('weekSelect');
+        sel.innerHTML = '';
+        for (var i = weekNums.length - 1; i >= 0; i--) {
+          var opt = document.createElement('option');
+          opt.value = weekNums[i];
+          opt.textContent = 'Week ' + weekNums[i];
+          sel.appendChild(opt);
+        }
+        sel.value = weekNums[weekNums.length - 1]; // latest
+        sel.onchange = function() { render(Number(sel.value)); };
+
+        var latest = weekNums[weekNums.length - 1];
+        document.getElementById('statusLine').textContent = 'Showing Week ' + latest + ' Â· ' + weekNums.length + ' weeks loaded Â· Last refreshed ' + new Date().toLocaleTimeString();
+        render(latest);
+      } catch(err) {
+        document.getElementById('main').innerHTML = '<div class="error-box"><h3>Could Not Load Data</h3><p>' + err.message + '</p></div>';
+        document.getElementById('statusLine').textContent = 'Error loading data';
+      }
+    };
+
+    script.src = JSONP_URL + '&tqx=responseHandler:google.visualization.Query.setResponse';
+    document.body.appendChild(script);
+  };
+
+  // Initial load
+  loadData();
+})();
+</script>
+</body>
+</html>
