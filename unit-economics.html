@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DNT Unit Economics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0e1a; color: #c9d4e8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding: 24px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 24px; border-bottom: 1px solid #1c2538; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: "SF Mono", monospace; font-size: 11px; color: #4ade80; letter-spacing: 2px; }
+  .h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-top: 4px; letter-spacing: -0.5px; }
+  .subtitle { font-size: 13px; color: #6b7894; margin-top: 6px; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .fee-entry { display: flex; align-items: center; gap: 8px; font-family: "SF Mono", monospace; font-size: 11px; color: #8a96b0; }
+  .fee-entry input { width: 100px; padding: 6px 8px; background: #0a0e1a; border: 1px solid #2a3651; border-radius: 4px; color: #d4a82c; font-family: "SF Mono", monospace; font-size: 13px; text-align: right; font-weight: 700; }
+  .fee-entry input:focus { outline: none; border-color: #d4a82c; }
+  .fee-hint { font-family: "SF Mono", monospace; font-size: 9px; color: #6b7894; letter-spacing: 1px; }
+  .header-buttons { display: flex; gap: 8px; }
+  .btn { font-family: "SF Mono", monospace; font-size: 10px; letter-spacing: 1.5px; padding: 7px 14px; border: 1px solid #2a3651; border-radius: 4px; background: #131929; color: #c9d4e8; cursor: pointer; transition: all 0.15s; font-weight: 600; }
+  .btn:hover { border-color: #4ade80; color: #4ade80; }
+  .btn-primary { background: #4ade80; border-color: #4ade80; color: #0a0e1a; }
+  .btn-primary:hover { background: #6ee89a; border-color: #6ee89a; color: #0a0e1a; }
+  .btn-sync { background: #131929; border-color: #4dd0e1; color: #4dd0e1; }
+  .btn-sync:hover { background: #4dd0e1; color: #0a0e1a; }
+  .btn-danger { color: #f87171; }
+  .btn-danger:hover { border-color: #f87171; }
+  .sources { display: flex; gap: 10px; margin-top: 20px; padding: 12px 14px; background: #0d1322; border: 1px solid #1c2538; border-radius: 8px; flex-wrap: wrap; align-items: center; }
+  .src-pill { display: inline-flex; align-items: center; gap: 6px; font-family: "SF Mono", monospace; font-size: 11px; padding: 5px 10px; border-radius: 4px; border: 1px solid #2a3651; background: #0a0e1a; }
+  .src-pill.ok { border-color: #4ade80; color: #4ade80; }
+  .src-pill.auto { border-color: #4dd0e1; color: #4dd0e1; }
+  .src-pill.missing { color: #6b7894; }
+  .src-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: #2a3651; }
+  .src-pill.ok .dot { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+  .src-pill.auto .dot { background: #4dd0e1; box-shadow: 0 0 6px #4dd0e1; }
+  .src-pill .tag { font-size: 8px; padding: 1px 5px; border-radius: 3px; background: rgba(77,208,225,0.15); color: #4dd0e1; letter-spacing: 1px; margin-left: 2px; }
+  .src-pill .tag.paste { background: rgba(77,222,128,0.15); color: #4ade80; }
+  .sources .spacer { flex: 1; }
+  .sources .hint { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1px; }
+  .empty-state { margin-top: 40px; padding: 48px 32px; background: #131929; border: 1px dashed #2a3651; border-radius: 10px; text-align: center; }
+  .empty-state h2 { font-size: 18px; color: #ffffff; margin-bottom: 12px; }
+  .empty-state p { color: #8a96b0; font-size: 13px; line-height: 1.7; max-width: 620px; margin: 0 auto 14px; }
+  .empty-state code { font-family: "SF Mono", monospace; background: #0a0e1a; padding: 2px 6px; border-radius: 3px; font-size: 11px; color: #c9d4e8; }
+  .empty-checks { margin-top: 20px; display: inline-flex; flex-direction: column; gap: 8px; text-align: left; }
+  .empty-check { display: flex; align-items: center; gap: 10px; font-family: "SF Mono", monospace; font-size: 12px; color: #8a96b0; }
+  .controls { display: flex; gap: 48px; margin-top: 20px; align-items: center; flex-wrap: wrap; }
+  .control-group .label { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .tabs { display: flex; gap: 8px; }
+  .tab { padding: 8px 16px; background: #131929; border: 1px solid #1c2538; border-radius: 6px; font-size: 13px; color: #8a96b0; cursor: pointer; transition: all 0.15s; }
+  .tab:hover { color: #c9d4e8; border-color: #2a3651; }
+  .tab.active { background: #4ade80; color: #0a0e1a; border-color: #4ade80; font-weight: 600; }
+  .zone-header { font-family: "SF Mono", monospace; font-size: 10px; color: #4ade80; letter-spacing: 2px; margin-top: 24px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #1c2538; }
+  .zone-header.cyan { color: #4dd0e1; }
+  .zone-header.gold { color: #d4a82c; }
+  .zone-header .sub { color: #6b7894; font-size: 9px; margin-left: 8px; letter-spacing: 1px; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .tile { background: #131929; border: 1px solid #1c2538; border-radius: 8px; padding: 20px; }
+  .tile .label { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; }
+  .tile .value { font-size: 28px; font-weight: 700; margin-top: 8px; font-family: "SF Mono", monospace; }
+  .tile .sub { font-size: 11px; color: #6b7894; margin-top: 6px; line-height: 1.5; }
+  .v-cyan { color: #4dd0e1; } .v-blue { color: #5b8def; } .v-green { color: #4ade80; }
+  .v-orange { color: #fb923c; } .v-purple { color: #c084fc; } .v-gold { color: #d4a82c; } .v-red { color: #f87171; }
+  .row { display: grid; gap: 16px; margin-top: 16px; }
+  .row-2 { grid-template-columns: 2fr 1fr; }
+  .row-1 { grid-template-columns: 1fr; }
+  .card { background: #131929; border: 1px solid #1c2538; border-radius: 8px; padding: 20px; }
+  .card-title { font-family: "SF Mono", monospace; font-size: 11px; color: #6b7894; letter-spacing: 1.5px; margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 340px; }
+  .funnel-stages { display: flex; flex-direction: column; gap: 2px; }
+  .fstage { display: grid; grid-template-columns: 150px 1fr 90px 80px; align-items: center; gap: 12px; padding: 10px 14px; background: #0d1322; border-radius: 6px; }
+  .fstage-name { font-family: "SF Mono", monospace; font-size: 12px; color: #e3e9f5; font-weight: 500; letter-spacing: 0.5px; }
+  .fstage-bar-wrap { height: 20px; background: #0a0e1a; border-radius: 4px; overflow: hidden; }
+  .fstage-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .fstage-value { font-family: "SF Mono", monospace; font-size: 14px; color: #ffffff; font-weight: 700; text-align: right; }
+  .fstage-rate { font-family: "SF Mono", monospace; font-size: 11px; color: #4ade80; text-align: right; }
+  .fstage-rate.bad { color: #f87171; }
+  .fstage-rate.med { color: #fb923c; }
+  .ue-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .ue-table th { text-align: right; padding: 10px 8px; color: #6b7894; font-family: "SF Mono", monospace; font-size: 10px; letter-spacing: 1px; border-bottom: 1px solid #2a3651; }
+  .ue-table th.left { text-align: left; }
+  .ue-table td { padding: 12px 8px; font-family: "SF Mono", monospace; text-align: right; border-bottom: 1px solid #1c2538; }
+  .ue-table td.left { text-align: left; font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #e3e9f5; font-weight: 500; }
+  .ue-table tr:last-child td { border-bottom: none; }
+  .ue-table tr.total td { background: #0d1322; font-weight: 700; color: #ffffff; border-top: 2px solid #4ade80; }
+  .be-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .be-box { background: #0d1322; border: 1px solid #1c2538; border-radius: 8px; padding: 16px; }
+  .be-box .lbl { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .be-box .val { font-family: "SF Mono", monospace; font-size: 22px; font-weight: 700; }
+  .be-box .sub { font-size: 11px; color: #8a96b0; margin-top: 6px; line-height: 1.5; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .ins-section { margin-bottom: 28px; }
+  .ins-section-title { font-family: "SF Mono", monospace; font-size: 10px; color: #4ade80; letter-spacing: 2px; margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid #1c2538; }
+  .ins-section-title.cyan { color: #4dd0e1; }
+  .ins-section-title.gold { color: #d4a82c; }
+  .ins-section-title.red { color: #f87171; }
+  .ins-grid { display: grid; gap: 14px; }
+  .ins-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .ins-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .ins-grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .ins-card { background: #0d1322; border: 1px solid #1c2538; border-radius: 8px; padding: 16px; }
+  .ins-card .lbl { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; margin-bottom: 6px; }
+  .ins-card .val { font-family: "SF Mono", monospace; font-size: 24px; font-weight: 700; }
+  .ins-card .sub { font-size: 11px; color: #8a96b0; margin-top: 6px; line-height: 1.5; }
+  .ins-insight { background: #131929; border: 1px solid #1c2538; border-radius: 8px; padding: 18px; margin-bottom: 12px; }
+  .ins-insight .tag { display: inline-block; font-family: "SF Mono", monospace; font-size: 9px; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; font-weight: 700; }
+  .ins-insight .tag-green { background: rgba(74,222,128,0.15); color: #4ade80; }
+  .ins-insight .tag-amber { background: rgba(212,168,44,0.15); color: #d4a82c; }
+  .ins-insight .tag-red { background: rgba(248,113,113,0.15); color: #f87171; }
+  .ins-insight .tag-cyan { background: rgba(77,208,225,0.15); color: #4dd0e1; }
+  .ins-insight p { font-size: 13px; color: #c9d4e8; line-height: 1.7; margin: 0; }
+  .ins-insight .num { color: #ffffff; font-weight: 700; }
+  .ins-insight .action { margin-top: 12px; padding: 10px 14px; background: #0a0e1a; border-left: 3px solid #4ade80; border-radius: 4px; font-size: 12px; color: #8a96b0; line-height: 1.6; }
+  .ins-insight .action strong { color: #4ade80; }
+  .ins-ch-row { display: grid; grid-template-columns: 110px 1fr 70px 80px 90px; align-items: center; gap: 8px; padding: 8px 12px; font-family: "SF Mono", monospace; font-size: 12px; }
+  .ins-ch-row:nth-child(odd) { background: #0d1322; border-radius: 6px; }
+  .ins-ch-row .bar-w { height: 16px; background: #0a0e1a; border-radius: 3px; overflow: hidden; }
+  .ins-ch-row .bar-f { height: 100%; border-radius: 3px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(5,8,16,0.85); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #131929; border: 1px solid #4ade80; border-radius: 12px; padding: 24px; width: 100%; max-width: 760px; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-family: "SF Mono", monospace; color: #4ade80; font-size: 14px; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .modal p { color: #8a96b0; font-size: 12px; line-height: 1.6; margin-bottom: 12px; }
+  .modal code { font-family: "SF Mono", monospace; background: #0a0e1a; color: #c9d4e8; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+  .modal textarea { width: 100%; height: 220px; background: #0a0e1a; border: 1px solid #2a3651; border-radius: 6px; color: #e3e9f5; font-family: "SF Mono", monospace; font-size: 11px; padding: 12px; resize: vertical; }
+  .modal textarea:focus { outline: none; border-color: #4ade80; }
+  .modal-detect { font-family: "SF Mono", monospace; font-size: 11px; padding: 8px 12px; border-radius: 4px; margin-top: 8px; min-height: 30px; }
+  .modal-detect.ok { background: rgba(77,222,128,0.1); border: 1px solid rgba(77,222,128,0.3); color: #4ade80; }
+  .modal-detect.err { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+  .modal-detect.idle { background: #0a0e1a; border: 1px solid #2a3651; color: #6b7894; }
+  .modal-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  @media (max-width: 1100px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .row-2 { grid-template-columns: 1fr; }
+    .fstage { grid-template-columns: 110px 1fr 80px 70px; }
+    .be-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="brand">DNT HOME BUYERS · UNIT ECONOMICS</div>
+    <div class="h1">Cost per Lead · Cost per Contract · Cost per Deal</div>
+    <div class="subtitle">Three zones: marketing flow (YTD, by channel) · team activity (YTD) · period economics (YTD)</div>
+  </div>
+  <div class="header-right">
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
+      <div class="fee-entry">
+        <span>AVG DEAL SIZE</span>
+        <input type="number" id="avgFee" value="62000" step="1000" min="0" onchange="renderAll()" title="Average net contribution per closed deal — used for ROI and break-even math">
+      </div>
+      <div class="fee-hint">NET CONTRIBUTION / CLOSED DEAL</div>
+    </div>
+    <div class="header-buttons">
+      <button class="btn btn-sync" onclick="syncFromSiblings()">↻ REFRESH</button>
+      <button class="btn btn-primary" onclick="openRefreshModal()">PASTE DATA</button>
+      <button class="btn btn-danger" onclick="resetData()">RESET</button>
+    </div>
+  </div>
+</div>
+
+<div class="sources" id="sources"></div>
+
+<div id="emptyState" class="empty-state" style="display:none;">
+  <h2>Waiting on data</h2>
+  <p>KPI data auto-pulls from the <strong>Google Sheet</strong> (Weekly Log tab) via JSONP. Marketing spend comes from <strong>PASTE DATA</strong> (QBO transactions export). Click ↻ REFRESH to re-pull KPI data.</p>
+  <div class="empty-checks" id="emptyChecks"></div>
+  <p style="margin-top:22px; color:#6b7894; font-size:11px;">If REFRESH reports nothing, make sure the Google Sheet is published to the web (File → Share → Publish to web).</p>
+</div>
+
+<div id="mainView" style="display:none;">
+  <div class="controls">
+    <div class="control-group">
+      <div class="label">VIEW</div>
+      <div class="tabs" id="view-tabs">
+        <div class="tab active" data-tab="zones">Three Zones</div>
+        <div class="tab" data-tab="funnel">Funnel</div>
+        <div class="tab" data-tab="unit">Unit Economics</div>
+        <div class="tab" data-tab="breakeven">Break-even</div>
+        <div class="tab" data-tab="insights" style="background:#4ade80;color:#0a0e1a;border-color:#4ade80;font-weight:600;">Insights</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content active" id="tab-zones">
+    <div class="zone-header cyan">ZONE 1 · MARKETING FLOW <span class="sub">YTD · BY CHANNEL · SPEND ÷ LEADS</span></div>
+    <div class="tiles">
+      <div class="tile" id="tileCpl"></div>
+      <div class="tile" id="tileCpr"></div>
+      <div class="tile" id="tileLeadConv"></div>
+      <div class="tile" id="tileTopChannel"></div>
+    </div>
+
+    <div class="zone-header">ZONE 2 · TEAM ACTIVITY <span class="sub">YTD · CHANNEL-BLIND · WHAT THE TEAM DID</span></div>
+    <div class="tiles">
+      <div class="tile" id="tileContacted"></div>
+      <div class="tile" id="tileQualified"></div>
+      <div class="tile" id="tileApptsRan"></div>
+      <div class="tile" id="tileOffers"></div>
+    </div>
+
+    <div class="zone-header gold">ZONE 3 · PERIOD ECONOMICS <span class="sub">YTD · COHORT-MATCHED · TRUE PROFITABILITY</span></div>
+    <div class="tiles">
+      <div class="tile" id="tileCpContract"></div>
+      <div class="tile" id="tileCpDeal"></div>
+      <div class="tile" id="tileRoi"></div>
+      <div class="tile" id="tileGap"></div>
+    </div>
+
+    <div class="row row-1">
+      <div class="card" style="margin-top:24px;">
+        <div class="card-title">CHANNEL UNIT ECONOMICS · PERIOD TOTAL</div>
+        <div style="overflow-x:auto;"><table class="ue-table" id="ueTable"></table></div>
+        <div style="margin-top:14px; padding:12px 14px; background: #0d1322; border-left: 3px solid #4ade80; border-radius: 4px; font-size: 11px; color: #8a96b0; line-height: 1.6;">
+          <strong style="color:#4ade80;">READ THIS:</strong> Cost per Record + Cost per Lead come from same-period marketing spend ÷ same-period KPI counts (clean math). Cost per Contract / Cost per Deal use channel attribution data when filled in (leverages the new <code>nicheContracts</code>/<code>bulkContracts</code>/etc. fields), otherwise blends across all marketing spend.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-funnel">
+    <div class="row row-2">
+      <div class="card"><div class="card-title">RECORDS → CLOSED · STAGE COUNTS & CONVERSION</div><div class="funnel-stages" id="funnelStages"></div>
+        <div style="margin-top:12px;font-size:11px;color:#6b7894;font-style:italic;">Records → Leads converts same-period. Stages from Contacted onward are rolling team activity on prior-week leads — same-period conversion math is approximate.</div>
+      </div>
+      <div class="card"><div class="card-title">BIGGEST LEAK</div><div id="biggestLeak"></div></div>
+    </div>
+    <div class="row row-1">
+      <div class="card"><div class="card-title">RECORDS & LEADS BY CHANNEL</div><div class="chart-wrap"><canvas id="recordsChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-unit">
+    <div class="row row-1">
+      <div class="card"><div class="card-title">CPL BY CHANNEL · COST PER LEAD PUSHED</div><div class="chart-wrap"><canvas id="cplChart"></canvas></div></div>
+    </div>
+    <div class="row row-1">
+      <div class="card"><div class="card-title">COST PER RECORD BY CHANNEL · LIST-QUALITY METRIC</div><div class="chart-wrap"><canvas id="cprChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-breakeven">
+    <div class="row row-1">
+      <div class="card">
+        <div class="card-title">BREAK-EVEN · ARE YOU PROFITABLE?</div>
+        <div class="be-grid" id="beGrid"></div>
+        <div style="margin-top:16px; padding:14px 16px; background: #0d1322; border-radius: 6px; font-size: 12px; color: #8a96b0; line-height: 1.7;" id="beNarrative"></div>
+      </div>
+    </div>
+    <div class="row row-1">
+      <div class="card"><div class="card-title">PACE VS. PLAN · PROJECTED ANNUAL</div><table class="ue-table" id="paceTable"></table></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-insights">
+    <div id="insightsReport"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="refreshModal" onclick="if(event.target===this)closeRefreshModal()">
+  <div class="modal">
+    <h3>PASTE DATA · MANUAL FALLBACK</h3>
+    <p>Use this if ↻ SYNC can't reach the sibling dashboards. Otherwise, prefer SYNC.</p>
+    <p style="color:#c9d4e8;"><strong>Marketing Transactions CSV</strong> · headers include <code>Date</code>, <code>Parent</code>, <code>Category</code>, <code>Vendor</code>, <code>Amount</code>.</p>
+    <p style="color:#c9d4e8;"><strong>KPI Weekly TSV</strong> · tab-separated rows from your KPI Tracker.</p>
+    <p style="color:#c9d4e8;"><strong>Sift Attribution CSV</strong> · headers include <code>Month</code>, <code>Channel</code>, <code>Spend</code>, <code>Leads</code>, <code>Contracts</code>, <code>Revenue</code>.</p>
+    <textarea id="pasteArea" placeholder="Paste CSV or tab-separated rows…" oninput="detectInput()"></textarea>
+    <div class="modal-detect idle" id="detectMsg">Awaiting input…</div>
+    <div class="modal-row">
+      <button class="btn" onclick="closeRefreshModal()">CANCEL</button>
+      <button class="btn btn-primary" id="applyBtn" onclick="applyPaste()" disabled style="opacity:0.4;">APPLY</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "dnt_unit_economics_v1";
+const KPI_SIBLING_KEY = "dnt_kpi_data";
+const MKT_SIBLING_KEY = "dnt_marketing_data_v1";
+const CHANNEL_COLORS = { "Bulk Calling": "#4dd0e1", "List": "#5b8def", "Direct Mail": "#c084fc", "Niche Calling": "#4ade80", "Website/SEO": "#fb923c", "Skip Tracing": "#d4a82c" };
+
+function csvSplitRow(line) {
+  const result = []; let cell = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQ) { if (c === '"') inQ = false; else cell += c; }
+    else if (c === '"') inQ = true;
+    else if (c === ',') { result.push(cell); cell = ''; }
+    else cell += c;
+  }
+  result.push(cell);
+  return result;
+}
+
+/* ── YTD BAKED DEFAULTS (Jan 1 – Apr 18, 2026 / Week 16) ──
+   Leads: actual YTD by channel from Rick.
+   Contracts/Closed: from Sift export (2026 deals only).
+   Records: not available pre-Week-17; will accumulate from weekly KPI sheet.
+   Funnel (offers/appts/qualified): will accumulate from weekly data going forward.
+*/
+const DEFAULT_KPI_WEEKS = {
+  "YTD": { nicheRec:2126, bulkRec:32144, dmRec:15224, websiteRec:0, nicheLeads:76, bulkLeads:120, dmLeads:9, websiteLeads:15, newLeads:220, unqualified:0, qualified:165, notInterested:0, ghosting:0, deadLeads:0, lostDeals:0, offersMade:95, apptsSet:29, apptsRan:29, contracts:3, closed:2, nicheContracts:0, bulkContracts:1, dmContracts:2, websiteContracts:0, nicheClosed:0, bulkClosed:0, dmClosed:2, websiteClosed:0, hotUwStale:0, activeLmQ:0, rm_dials:0, rm_connects:0, sp_txtSent:0, sp_txtRecv:0, inboundCalls:0 }
+};
+
+const DEFAULT_MARKETING = {
+  totals: { total: 86291.99, marketing: 61168.98, labor: 17554.60, overhead: 7568.41, daysCovered: 120, txCount: 201 },
+  byChannel: { "Bulk Calling": 19544.43, "List": 14640.00, "Direct Mail": 11820.00, "Niche Calling": 8262.53, "Website/SEO": 4800.00, "Skip Tracing": 1075.02 },
+  periodStart: "Jan 1, 2026", periodEnd: "Apr 30, 2026"
+};
+
+const DEFAULT_KPI = {
+  weeks: [{ wk:"YTD", nicheRec:2126, bulkRec:32144, dmRec:15224, websiteRec:0, nicheLeads:76, bulkLeads:120, dmLeads:9, websiteLeads:15, newLeads:220, unqualified:0, qualified:165, notInterested:0, ghosting:0, deadLeads:0, lostDeals:0, offersMade:95, apptsSet:29, apptsRan:29, contracts:3, closed:2, nicheContracts:0, bulkContracts:1, dmContracts:2, websiteContracts:0, nicheClosed:0, bulkClosed:0, dmClosed:2, websiteClosed:0, hotUwStale:0, activeLmQ:0, rm_dials:0, rm_connects:0, sp_txtSent:0, sp_txtRecv:0, inboundCalls:0 }],
+  totals: { nicheRec:2126, bulkRec:32144, dmRec:15224, websiteRec:0, nicheLeads:76, bulkLeads:120, dmLeads:9, websiteLeads:15, newLeads:220, unqualified:0, qualified:165, notInterested:0, ghosting:0, deadLeads:0, lostDeals:0, offersMade:95, apptsSet:29, apptsRan:29, contracts:3, closed:2, nicheContracts:0, bulkContracts:1, dmContracts:2, websiteContracts:0, nicheClosed:0, bulkClosed:0, dmClosed:2, websiteClosed:0, hotUwStale:0, activeLmQ:0, rm_dials:0, rm_connects:0, sp_txtSent:0, sp_txtRecv:0, inboundCalls:0, totalRecords:49494, totalLeads:220, totalFunnel:385, qualRate:0.429, deadTotal:0, apptRate:0.305, showRate:1.0, contractsTotal:3, closedTotal:2 },
+  recordsByChannel: { "Bulk Calling":32144, "Niche Calling":2126, "Direct Mail":15224, "Website/SEO":0 },
+  leadsByChannel: { "Bulk Calling":120, "Niche Calling":76, "Direct Mail":9, "Website/SEO":15 },
+  contractsByChannel: { "Bulk Calling":1, "Niche Calling":0, "Direct Mail":2, "Website/SEO":0 },
+  closedByChannel: { "Bulk Calling":0, "Niche Calling":0, "Direct Mail":2, "Website/SEO":0 }
+};
+
+let state = {
+  marketing: DEFAULT_MARKETING, marketingSource: "baked",
+  kpi: DEFAULT_KPI, kpiSource: "baked",
+  attribution: null, attributionSource: "missing",
+  updatedAt: null, lastSyncAt: null
+};
+let charts = {};
+
+const fmt$  = v => "$" + (Math.round(v||0)).toLocaleString("en-US");
+const fmt$k = v => "$" + ((v||0)/1000).toFixed(1) + "K";
+const fmtN  = v => (v||0).toLocaleString("en-US");
+const fmtPct = v => ((v||0)*100).toFixed(1) + "%";
+
+function parseCSV(text) {
+  const rows = []; let row = [], cell = "", inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) { if (c === '"' && text[i+1] === '"') { cell += '"'; i++; } else if (c === '"') inQ = false; else cell += c; }
+    else { if (c === '"') inQ = true; else if (c === ',') { row.push(cell); cell = ""; } else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ""; } else if (c === '\r') {} else cell += c; }
+  }
+  if (cell.length || row.length) { row.push(cell); rows.push(row); }
+  if (!rows.length) return { headers: [], rows: [] };
+  const headers = rows[0].map(h => h.trim());
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i].length === 1 && rows[i][0] === "") continue;
+    const obj = {}; headers.forEach((h, idx) => { obj[h] = (rows[i][idx] || "").trim(); });
+    out.push(obj);
+  }
+  return { headers, rows: out };
+}
+function parseTSV(text) { return text.split(/\r?\n/).filter(l => l.trim().length).map(l => l.split("\t")); }
+
+function detectType(text) {
+  const t = text.trim(); if (!t) return null;
+  if (t.includes(",")) {
+    const p = parseCSV(t); const H = p.headers.map(h => h.toLowerCase());
+    if (H.includes("month") && H.includes("channel") && H.includes("spend") && (H.includes("leads") || H.includes("cpl"))) return { kind: "attribution", parsed: p };
+    if (H.includes("date") && H.includes("amount") && (H.includes("category") || H.includes("parent") || H.includes("vendor"))) return { kind: "transactions", parsed: p };
+  }
+  const rows = parseTSV(t);
+  if (rows.length && rows[0].length >= 15) {
+    const numericCount = rows[0].filter(c => /^-?\d+(\.\d+)?$/.test(c.replace(/[,$]/g,""))).length;
+    if (numericCount >= 8) return { kind: "kpi", parsed: rows };
+  }
+  return null;
+}
+
+function processTransactions(rows) {
+  const txns = [];
+  for (const r of rows) {
+    const dStr = r.Date || r.date; if (!dStr) continue;
+    const d = new Date(dStr); if (isNaN(d)) continue;
+    const amt = parseFloat((r.Amount || r.amount || "0").replace(/[$,]/g,"")); if (isNaN(amt)) continue;
+    txns.push({ date: d, parent: (r.Parent || r.parent || "Uncategorized").trim(), category: (r.Category || r.category || "Uncategorized").trim(), amount: amt });
+  }
+  if (!txns.length) throw new Error("No valid transactions parsed.");
+  txns.sort((a,b) => a.date - b.date);
+  const startDate = txns[0].date, endDate = txns[txns.length-1].date;
+  const daysCovered = Math.max(1, Math.round((endDate - startDate) / 86400000) + 1);
+  const totals = { Marketing: 0, Labor: 0, Overhead: 0 }; const byChannel = {};
+  for (const t of txns) {
+    const p = (totals[t.parent] !== undefined) ? t.parent : "Overhead";
+    totals[p] += t.amount;
+    if (t.parent === "Marketing") byChannel[t.category] = (byChannel[t.category] || 0) + t.amount;
+  }
+  return {
+    totals: { total: totals.Marketing+totals.Labor+totals.Overhead, marketing: totals.Marketing, labor: totals.Labor, overhead: totals.Overhead, daysCovered, txCount: txns.length },
+    byChannel,
+    periodStart: startDate.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }),
+    periodEnd: endDate.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
+  };
+}
+
+const KPI_FIELDS = ["nicheRec","bulkRec","dmRec","websiteRec",
+                    "nicheLeads","bulkLeads","dmLeads","websiteLeads",
+                    "newLeads","unqualified","qualified",
+                    "notInterested","ghosting","deadLeads","lostDeals",
+                    "offersMade","apptsSet","apptsRan",
+                    "contracts","closed",
+                    "nicheContracts","bulkContracts","dmContracts","websiteContracts",
+                    "nicheClosed","bulkClosed","dmClosed","websiteClosed",
+                    "hotUwStale","activeLmQ",
+                    "rm_dials","rm_connects","sp_txtSent","sp_txtRecv","inboundCalls"];
+
+function aggregateKpiTotals(weeks) {
+  const t = {};
+  KPI_FIELDS.forEach(f => { t[f] = weeks.reduce((s,w)=>s+(Number(w[f])||0),0); });
+  t.totalRecords = (t.nicheRec||0)+(t.bulkRec||0)+(t.dmRec||0)+(t.websiteRec||0);
+  t.totalLeads   = (t.nicheLeads||0)+(t.bulkLeads||0)+(t.dmLeads||0)+(t.websiteLeads||0);
+  t.totalFunnel  = (t.newLeads||0)+(t.unqualified||0)+(t.qualified||0);
+  t.qualRate     = t.totalFunnel > 0 ? t.qualified / t.totalFunnel : 0;
+  t.deadTotal    = (t.notInterested||0)+(t.ghosting||0)+(t.deadLeads||0)+(t.lostDeals||0);
+  t.apptRate     = (t.offersMade||0) > 0 ? (t.apptsSet||0) / (t.offersMade||0) : 0;
+  t.showRate     = (t.apptsSet||0) > 0 ? (t.apptsRan||0) / (t.apptsSet||0) : 0;
+  const channelContractsSum = (t.nicheContracts||0)+(t.bulkContracts||0)+(t.dmContracts||0)+(t.websiteContracts||0);
+  const channelClosedSum    = (t.nicheClosed||0)+(t.bulkClosed||0)+(t.dmClosed||0)+(t.websiteClosed||0);
+  t.contractsTotal = channelContractsSum > 0 ? channelContractsSum : (t.contracts||0);
+  t.closedTotal    = channelClosedSum    > 0 ? channelClosedSum    : (t.closed||0);
+  return t;
+}
+
+function buildChannelMaps(t) {
+  return {
+    recordsByChannel:   { "Bulk Calling": t.bulkRec||0, "Niche Calling": t.nicheRec||0, "Direct Mail": t.dmRec||0, "Website/SEO": t.websiteRec||0 },
+    leadsByChannel:     { "Bulk Calling": t.bulkLeads||0, "Niche Calling": t.nicheLeads||0, "Direct Mail": t.dmLeads||0, "Website/SEO": t.websiteLeads||0 },
+    contractsByChannel: { "Bulk Calling": t.bulkContracts||0, "Niche Calling": t.nicheContracts||0, "Direct Mail": t.dmContracts||0, "Website/SEO": t.websiteContracts||0 },
+    closedByChannel:    { "Bulk Calling": t.bulkClosed||0, "Niche Calling": t.nicheClosed||0, "Direct Mail": t.dmClosed||0, "Website/SEO": t.websiteClosed||0 }
+  };
+}
+
+function processKPI(tsvRows) {
+  const PASTE_FIELDS = ["wk","nicheRec","bulkRec","dmRec","websiteRec",
+    "nicheLeads","bulkLeads","dmLeads","websiteLeads",
+    "newLeads","unqualified","qualified","notInterested","ghosting","deadLeads","lostDeals",
+    "offersMade","apptsSet","apptsRan","contracts","closed",
+    "nicheContracts","bulkContracts","dmContracts","websiteContracts",
+    "nicheClosed","bulkClosed","dmClosed","websiteClosed","dmCost",
+    "hotUwStale","activeLmQ"];
+  const num = s => { const v = parseFloat(String(s||"").replace(/[,$%]/g,"")); return isNaN(v) ? 0 : v; };
+  const weeks = [];
+  for (const row of tsvRows) {
+    if (!row.length) continue;
+    const w = {};
+    PASTE_FIELDS.forEach((f, i) => { const cell = row[i] !== undefined ? row[i].trim() : ""; w[f] = (f === "wk") ? cell : num(cell); });
+    weeks.push(w);
+  }
+  if (!weeks.length) throw new Error("No KPI rows parsed.");
+  const t = aggregateKpiTotals(weeks);
+  return { weeks, totals: t, ...buildChannelMaps(t) };
+}
+
+function processKPIFromStore(weeklyData) {
+  const weeks = Object.entries(weeklyData).map(([wk, d]) => {
+    const w = { wk: "Week " + wk };
+    KPI_FIELDS.forEach(f => { w[f] = Number(d[f]) || 0; });
+    return w;
+  });
+  if (!weeks.length) return null;
+  const t = aggregateKpiTotals(weeks);
+  return { weeks, totals: t, ...buildChannelMaps(t) };
+}
+
+function adaptMarketingFromStore(mcStore) {
+  if (!mcStore || !mcStore.totals) return null;
+  const byChannel = {};
+  if (mcStore.channels && Array.isArray(mcStore.channels.series)) {
+    for (const s of mcStore.channels.series) byChannel[s.name] = s.ytd;
+  }
+  return {
+    totals: { total: mcStore.totals.total, marketing: mcStore.totals.marketing, labor: mcStore.totals.labor, overhead: mcStore.totals.overhead, daysCovered: mcStore.totals.daysCovered, txCount: mcStore.totals.txCount },
+    byChannel, periodStart: mcStore.totals.periodStart, periodEnd: mcStore.totals.periodEnd
+  };
+}
+
+function processAttribution(rows) {
+  const byMC = {};
+  for (const r of rows) {
+    const m = (r.Month || "").trim(), c = (r.Channel || "").trim();
+    if (!m || !c) continue;
+    if (!byMC[m]) byMC[m] = {};
+    byMC[m][c] = { spend: parseFloat((r.Spend||"0").replace(/[$,]/g,"")) || 0, leads: parseInt((r.Leads||"0").replace(/,/g,"")) || 0, contracts: parseInt((r.Contracts||"0").replace(/,/g,"")) || 0, revenue: parseFloat((r.Revenue||"0").replace(/[$,]/g,"")) || 0 };
+  }
+  const totalsByCh = {};
+  for (const m of Object.keys(byMC)) {
+    for (const c of Object.keys(byMC[m])) {
+      if (!totalsByCh[c]) totalsByCh[c] = { spend:0, leads:0, contracts:0, revenue:0 };
+      totalsByCh[c].spend += byMC[m][c].spend; totalsByCh[c].leads += byMC[m][c].leads;
+      totalsByCh[c].contracts += byMC[m][c].contracts; totalsByCh[c].revenue += byMC[m][c].revenue;
+    }
+  }
+  return { byMonthChannel: byMC, totalsByChannel: totalsByCh };
+}
+
+// === JSONP LOADER (Google Visualization API — same as KPI dashboard) ===
+const SHEET_ID = '1qc1mcyI8lY7wXRssNTbgJzez0eOz06qmmeMsiMcPb9U';
+const SHEET_NAME = 'Weekly Log';
+const JSONP_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(SHEET_NAME);
+
+const COLS_MAP = ['wk','nicheRec','bulkRec','dmRec','websiteRec','nicheLeads','bulkLeads','dmLeads','websiteLeads','newLeads','unqualified','qualified','notInterested','ghosting','deadLeads','lostDeals','offersMade','apptsSet','apptsRan','contracts','closed','nicheContracts','bulkContracts','dmContracts','websiteContracts','nicheClosed','bulkClosed','dmClosed','websiteClosed','dmCost','hotUwStale','activeLmQ','sp_cleton_out','sp_cleton_dial','sp_rachelle_out','sp_rachelle_dial','sp_joey_out','sp_joey_dial','sp_beatriz_out','sp_beatriz_dial','sp_sefora_out','sp_sefora_dial','sp_txtSent','sp_txtRecv','inboundCalls','rm_dials','rm_connects','rm_notAvailVM','rm_notInterested','rm_wrongNum','rm_dnc','rm_newLead','rm_spanish','rm_followUp','rm_sold'];
+
+function loadKpiFromSheet() {
+  return new Promise((resolve) => {
+    const old = document.getElementById('gviz-ue-loader');
+    if (old) old.parentNode.removeChild(old);
+    const script = document.createElement('script');
+    script.id = 'gviz-ue-loader';
+    script.onerror = () => { console.error('JSONP load failed'); resolve(false); };
+    window.__ueGvizCb = function(resp) {
+      try {
+        if (resp.status === 'error') { resolve(false); return; }
+        const table = resp.table;
+        if (!table || !table.rows) { resolve(false); return; }
+        const weeklyData = {};
+        for (let i = 0; i < table.rows.length; i++) {
+          const cells = table.rows[i].c;
+          if (!cells || !cells[0] || cells[0].v == null) continue;
+          const wk = parseInt(cells[0].v);
+          if (isNaN(wk) || wk < 1 || wk > 52) continue;
+          let hasData = false;
+          for (let j = 1; j < cells.length; j++) {
+            if (cells[j] && cells[j].v != null && cells[j].v !== '') { hasData = true; break; }
+          }
+          if (!hasData) continue;
+          weeklyData[wk] = {};
+          for (let j = 0; j < COLS_MAP.length && j < cells.length; j++) {
+            const val = (cells[j] && cells[j].v != null) ? Number(cells[j].v) || 0 : 0;
+            if (val !== 0) weeklyData[wk][COLS_MAP[j]] = val;
+          }
+        }
+        if (!Object.keys(weeklyData).length) { resolve(false); return; }
+        // Merge baked YTD baseline (Weeks 1-16) + sheet weekly data
+        const merged = {};
+        for (const [k, v] of Object.entries(DEFAULT_KPI_WEEKS)) merged[k] = v;
+        for (const [k, v] of Object.entries(weeklyData)) merged[k] = v;
+        const built = processKPIFromStore(merged);
+        if (built) { state.kpi = built; state.kpiSource = "auto"; resolve(true); }
+        else resolve(false);
+      } catch (err) { console.error('Sheet parse error:', err); resolve(false); }
+    };
+    script.src = JSONP_URL + '&tqx=responseHandler:__ueGvizCb';
+    document.body.appendChild(script);
+  });
+}
+
+async function syncFromSiblings(silent) {
+  let kpiPulled = false;
+  kpiPulled = await loadKpiFromSheet();
+  state.lastSyncAt = new Date().toISOString();
+  renderAll();
+  if (!silent && !kpiPulled) {
+    alert("Could not pull KPI data from Google Sheet. Check that the sheet is published to the web, or use PASTE DATA as fallback.");
+  }
+}
+
+function getAvgDealSize() { return parseFloat(document.getElementById("avgFee").value) || 62000; }
+function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy(); } catch(e) {} }); charts = {}; }
+
+function renderSources() {
+  const srcClass = (s) => s === "auto" ? "auto" : s === "paste" ? "ok" : s === "baked" ? "ok" : "missing";
+  const srcTag = (s) => s === "auto" ? '<span class="tag">AUTO</span>' : s === "paste" ? '<span class="tag paste">PASTE</span>' : s === "baked" ? '<span class="tag paste">BAKED</span>' : "";
+  const srcDot = (s) => s === "missing" ? "—" : "✓";
+  document.getElementById("sources").innerHTML = `
+    <div class="src-pill ${srcClass(state.marketingSource)}"><span class="dot"></span>MARKETING SPEND ${srcDot(state.marketingSource)}${srcTag(state.marketingSource)}</div>
+    <div class="src-pill ${srcClass(state.kpiSource)}"><span class="dot"></span>KPI FUNNEL ${srcDot(state.kpiSource)}${srcTag(state.kpiSource)}</div>
+    <div class="src-pill ${srcClass(state.attributionSource)}"><span class="dot"></span>SIFT ATTRIBUTION ${srcDot(state.attributionSource)}${srcTag(state.attributionSource)}</div>
+    <div class="spacer"></div>
+    <div class="hint">${state.lastSyncAt ? 'LAST SYNC · ' + new Date(state.lastSyncAt).toLocaleString() : state.updatedAt ? 'LAST UPDATE · ' + new Date(state.updatedAt).toLocaleString() : 'NO DATA LOADED'}</div>`;
+}
+
+function renderEmptyOrMain() {
+  const hasAny = state.marketing || state.kpi || state.attribution;
+  document.getElementById("emptyState").style.display = hasAny ? "none" : "block";
+  document.getElementById("mainView").style.display = hasAny ? "block" : "none";
+  if (!hasAny) {
+    document.getElementById("emptyChecks").innerHTML = [
+      "Marketing spend pasted (QBO transactions) → spend + channel mix",
+      "KPI data synced from Google Sheet → records, leads, funnel, attribution",
+      "Sift attribution pasted (optional) → enriches per-channel ROI"
+    ].map(t => `<div class="empty-check">○  ${t}</div>`).join("");
+    return false;
+  }
+  return true;
+}
+
+function renderTiles() {
+  const mkt = state.marketing, kpi = state.kpi;
+  const dealSize = getAvgDealSize();
+  const spend = mkt ? mkt.totals.marketing : 0;
+  const totalSpend = mkt ? mkt.totals.total : 0;
+  const records = kpi ? kpi.totals.totalRecords : 0;
+  const leads = kpi ? kpi.totals.totalLeads : 0;
+  const contracts = kpi ? kpi.totals.contractsTotal : 0;
+  const closed = kpi ? kpi.totals.closedTotal : 0;
+
+  const cpl = (leads > 0 && spend > 0) ? (spend / leads) : null;
+  const cpr = (records > 0 && spend > 0) ? (spend / records) : null;
+  const recToLead = (records > 0) ? leads/records : 0;
+  const cpc = (contracts > 0 && spend > 0) ? (spend / contracts) : null;
+  const cpd = (closed > 0 && spend > 0) ? (totalSpend / closed) : null;
+  const revenue = closed * dealSize;
+  const roi = (totalSpend > 0 && closed > 0) ? ((revenue - totalSpend) / totalSpend * 100) : null;
+
+  let topChannel = null, topCpl = Infinity;
+  if (mkt && kpi) {
+    for (const ch of Object.keys(kpi.leadsByChannel)) {
+      const s = mkt.byChannel[ch] || 0; const l = kpi.leadsByChannel[ch] || 0;
+      if (l > 0 && s > 0) { const c = s/l; if (c < topCpl) { topCpl = c; topChannel = ch; } }
+    }
+  }
+
+  document.getElementById("tileCpl").innerHTML = `<div class="label">COST PER LEAD PUSHED</div><div class="value v-cyan">${cpl !== null ? fmt$(cpl) : "—"}</div><div class="sub">${leads ? fmtN(leads) + " leads · " + fmt$k(spend) + " marketing" : "Need spend + leads pushed"}</div>`;
+  document.getElementById("tileCpr").innerHTML = `<div class="label">COST PER RECORD</div><div class="value v-blue">${cpr !== null ? fmt$(cpr) : "—"}</div><div class="sub">${records ? fmtN(records) + " records pulled" : "Need records"}</div>`;
+  document.getElementById("tileLeadConv").innerHTML = `<div class="label">RECORDS → LEADS</div><div class="value v-green">${records > 0 ? fmtPct(recToLead) : "—"}</div><div class="sub">Blended; per-channel below</div>`;
+  document.getElementById("tileTopChannel").innerHTML = `<div class="label">CHEAPEST CHANNEL (CPL)</div><div class="value v-purple">${topChannel || "—"}</div><div class="sub">${topChannel ? fmt$(topCpl) + " per lead" : "Need both data sources"}</div>`;
+
+  const t = kpi ? kpi.totals : {};
+  document.getElementById("tileContacted").innerHTML = `<div class="label">QUALIFIED (SIFT)</div><div class="value v-cyan">${fmtN(t.qualified)}</div><div class="sub">${t.totalFunnel > 0 ? fmtPct(t.qualRate) + " of active funnel" : "from Sift dashboard"}</div>`;
+  document.getElementById("tileQualified").innerHTML = `<div class="label">OFFERS MADE</div><div class="value v-green">${fmtN(t.offersMade)}</div><div class="sub">${t.qualified > 0 ? fmtPct(t.offersMade / t.qualified) + " of qualified" : "team activity"}</div>`;
+  document.getElementById("tileApptsRan").innerHTML = `<div class="label">APPTS RAN</div><div class="value v-purple">${fmtN(t.apptsRan)}</div><div class="sub">${t.apptsSet > 0 ? fmtPct(t.showRate) + " show rate" : "team activity"}</div>`;
+  document.getElementById("tileOffers").innerHTML = `<div class="label">CONTRACTS</div><div class="value v-orange">${fmtN(t.contractsTotal)}</div><div class="sub">${t.offersMade > 0 ? fmtPct(t.contractsTotal / t.offersMade) + " of offers" : "team activity"}</div>`;
+
+  document.getElementById("tileCpContract").innerHTML = `<div class="label">COST PER CONTRACT</div><div class="value v-blue">${cpc !== null ? fmt$(cpc) : "—"}</div><div class="sub">${contracts ? fmtN(contracts) + " contracts · YTD" : "Need contracts"}</div>`;
+  document.getElementById("tileCpDeal").innerHTML = `<div class="label">COST PER CLOSED DEAL</div><div class="value v-gold">${cpd !== null ? fmt$(cpd) : "—"}</div><div class="sub">${closed ? fmtN(closed) + " closed · " + fmt$k(totalSpend) + " all-in" : "Need closed deals"}</div>`;
+  document.getElementById("tileRoi").innerHTML = `<div class="label">ROI (AT ${fmt$k(dealSize)}/DEAL)</div><div class="value ${roi === null ? 'v-purple' : roi > 0 ? 'v-green' : 'v-red'}">${roi !== null ? roi.toFixed(0)+"%" : "—"}</div><div class="sub">${closed ? fmt$k(revenue) + " rev − " + fmt$k(totalSpend) + " all-in" : "Need closed deals"}</div>`;
+
+  if (mkt && closed) {
+    const runRate = totalSpend * 365 / mkt.totals.daysCovered;
+    const dealsNeeded = Math.ceil(runRate / dealSize);
+    const projected = Math.round(closed * 365 / mkt.totals.daysCovered);
+    const gap = projected - dealsNeeded;
+    document.getElementById("tileGap").innerHTML = `<div class="label">GAP TO BREAK-EVEN</div><div class="value ${gap >= 0 ? 'v-green' : 'v-red'}">${gap >= 0 ? '+' : ''}${gap}</div><div class="sub">deals/yr at ${fmt$k(dealSize)}/deal · need ${dealsNeeded} · projecting ${projected}</div>`;
+  } else {
+    document.getElementById("tileGap").innerHTML = `<div class="label">GAP TO BREAK-EVEN</div><div class="value v-purple">—</div><div class="sub">Need spend + closed</div>`;
+  }
+}
+
+function renderFunnel() {
+  const kpi = state.kpi;
+  const container = document.getElementById("funnelStages");
+  const leakEl = document.getElementById("biggestLeak");
+  if (!kpi) { container.innerHTML = `<div style="padding:20px; text-align:center; color:#6b7894; font-size:12px;">Load KPI data to see the funnel.</div>`; leakEl.innerHTML = `<div style="padding:20px; text-align:center; color:#6b7894; font-size:12px;">—</div>`; return; }
+  const t = kpi.totals;
+  const stages = [
+    { name: "RECORDS",      value: t.totalRecords, color: "#4dd0e1" },
+    { name: "LEADS PUSHED", value: t.totalLeads,   color: "#5b8def" },
+    { name: "NEW LEADS",    value: t.newLeads,     color: "#38bdf8" },
+    { name: "UNQUALIFIED",  value: t.unqualified,  color: "#a78bfa" },
+    { name: "QUALIFIED",    value: t.qualified,     color: "#4ade80" },
+    { name: "OFFERS MADE",  value: t.offersMade,   color: "#fb923c" },
+    { name: "APPTS SET",    value: t.apptsSet,     color: "#c084fc" },
+    { name: "APPTS RAN",    value: t.apptsRan,     color: "#f472b6" },
+    { name: "CONTRACTS",    value: t.contractsTotal, color: "#34d399" },
+    { name: "CLOSED",       value: t.closedTotal,    color: "#d4a82c" }
+  ];
+  const max = stages[0].value || 1; const rates = [];
+  container.innerHTML = stages.map((s, idx) => {
+    const width = Math.max(2, (s.value / max) * 100);
+    let rateStr = "—", rateClass = "";
+    if (idx > 0) {
+      const prev = stages[idx-1].value;
+      if (prev > 0) {
+        const r = s.value / prev;
+        rateStr = (r*100).toFixed(1) + "%";
+        rateClass = r < 0.05 ? "bad" : r < 0.2 ? "med" : "";
+        rates.push({ name: stages[idx-1].name + " → " + s.name, rate: r, value: s.value, prev });
+      }
+    }
+    return `<div class="fstage"><div class="fstage-name">${s.name}</div><div class="fstage-bar-wrap"><div class="fstage-bar" style="width:${width}%; background:${s.color};"></div></div><div class="fstage-value">${fmtN(s.value)}</div><div class="fstage-rate ${rateClass}">${rateStr}</div></div>`;
+  }).join("");
+  if (rates.length) {
+    const worst = rates.reduce((a,b) => a.rate < b.rate ? a : b);
+    const recsToCloseRate = t.closedTotal / Math.max(1, t.totalRecords);
+    leakEl.innerHTML = `
+      <div style="font-family:'SF Mono',monospace; font-size:10px; color:#6b7894; letter-spacing:1.5px; margin-bottom:6px;">WEAKEST STAGE</div>
+      <div style="font-size:15px; color:#f87171; font-weight:600; margin-bottom:4px;">${worst.name}</div>
+      <div style="font-family:'SF Mono',monospace; font-size:24px; color:#f87171; font-weight:700; margin-bottom:8px;">${(worst.rate*100).toFixed(1)}%</div>
+      <div style="font-size:11px; color:#8a96b0; line-height:1.5; margin-bottom:16px;">Only ${fmtN(worst.value)} of ${fmtN(worst.prev)} made it through. Improving by 10 points compounds downstream.</div>
+      <div style="padding-top:14px; border-top:1px solid #1c2538;">
+        <div style="font-family:'SF Mono',monospace; font-size:10px; color:#6b7894; letter-spacing:1.5px; margin-bottom:6px;">RECORDS → CLOSED</div>
+        <div style="font-family:'SF Mono',monospace; font-size:20px; color:#d4a82c; font-weight:700;">${(recsToCloseRate*100).toFixed(2)}%</div>
+        <div style="font-size:11px; color:#8a96b0; margin-top:4px;">${fmtN(t.totalRecords)} in · ${fmtN(t.closedTotal)} out</div>
+      </div>`;
+  }
+}
+
+function renderRecordsChart() {
+  const kpi = state.kpi; if (!kpi) return;
+  const channels = ["Bulk Calling","Niche Calling","Direct Mail","Website/SEO"];
+  charts.records = new Chart(document.getElementById("recordsChart"), {
+    type: "bar",
+    data: { labels: channels, datasets: [
+      { label: "Records Pulled", data: channels.map(c => kpi.recordsByChannel[c]||0), backgroundColor: channels.map(c => CHANNEL_COLORS[c]||"#8a96b0"), borderRadius: 6 },
+      { label: "Leads Pushed",   data: channels.map(c => kpi.leadsByChannel[c]||0),   backgroundColor: channels.map(c => (CHANNEL_COLORS[c]||"#8a96b0")+"99"), borderRadius: 6 }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom", labels: { color: "#8a96b0", font: { family: "SF Mono", size: 11 } } }, tooltip: { backgroundColor: "#0a0e1a", borderColor: "#2a3651", borderWidth: 1, titleColor: "#fff", bodyColor: "#c9d4e8", padding: 12 } },
+      scales: {
+        x: { ticks: { color: "#c9d4e8", font: { family: "SF Mono", size: 12 } }, grid: { display: false } },
+        y: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 } }, grid: { color: "#1c2538" } }
+      }
+    }
+  });
+}
+
+function renderUnitEconTable() {
+  const mkt = state.marketing, kpi = state.kpi, attr = state.attribution;
+  const tEl = document.getElementById("ueTable");
+  if (!mkt && !kpi) { tEl.innerHTML = `<tr><td style="padding:30px; text-align:center; color:#6b7894;">Load marketing spend and KPI data to populate.</td></tr>`; return; }
+  const channels = ["Bulk Calling","Niche Calling","Direct Mail","Website/SEO","List","Skip Tracing"];
+  const dealSize = getAvgDealSize();
+  const rows = channels.map(ch => {
+    const spend = mkt && mkt.byChannel[ch] ? mkt.byChannel[ch] : 0;
+    const records = kpi && kpi.recordsByChannel[ch] !== undefined ? kpi.recordsByChannel[ch] : null;
+    const leads = kpi && kpi.leadsByChannel[ch] !== undefined ? kpi.leadsByChannel[ch] : null;
+    const cpl = (leads !== null && leads > 0 && spend > 0) ? spend / leads : null;
+    const cpr = (records !== null && records > 0 && spend > 0) ? spend / records : null;
+    const conv = (records !== null && records > 0 && leads !== null) ? leads/records : null;
+    let contracts = null;
+    if (kpi && kpi.contractsByChannel[ch] !== undefined && kpi.contractsByChannel[ch] > 0) contracts = kpi.contractsByChannel[ch];
+    else if (attr && attr.totalsByChannel[ch]) contracts = attr.totalsByChannel[ch].contracts;
+    const closed = kpi && kpi.closedByChannel[ch] !== undefined && kpi.closedByChannel[ch] > 0 ? kpi.closedByChannel[ch] : null;
+    const cpContract = (contracts && contracts > 0 && spend > 0) ? spend / contracts : null;
+    const revenue = closed !== null ? closed * dealSize : (attr && attr.totalsByChannel[ch] ? attr.totalsByChannel[ch].revenue : null);
+    const roi = (revenue && spend > 0) ? ((revenue - spend) / spend * 100) : null;
+    return { ch, spend, records, leads, cpr, cpl, conv, contracts, cpContract, closed, roi };
+  });
+  const totSpend = rows.reduce((s,r)=>s+r.spend,0);
+  const totRec = rows.reduce((s,r)=>s+(r.records||0),0);
+  const totLeads = rows.reduce((s,r)=>s+(r.leads||0),0);
+  const totContracts = rows.reduce((s,r)=>s+(r.contracts||0),0);
+  let html = `<thead><tr><th class="left">CHANNEL</th><th>SPEND</th><th>RECORDS</th><th>LEADS</th><th>CONV %</th><th>CPR</th><th>CPL</th><th>CONTRACTS</th><th>$/CONTRACT</th><th>ROI</th></tr></thead><tbody>`;
+  html += rows.map(r => `
+    <tr>
+      <td class="left"><span style="display:inline-block;width:10px;height:10px;background:${CHANNEL_COLORS[r.ch]||'#8a96b0'};border-radius:2px;margin-right:8px;"></span>${r.ch}</td>
+      <td style="color:#c9d4e8;">${r.spend > 0 ? fmt$(r.spend) : "—"}</td>
+      <td style="color:#c9d4e8;">${r.records !== null ? fmtN(r.records) : "—"}</td>
+      <td style="color:#c9d4e8;">${r.leads !== null ? fmtN(r.leads) : "—"}</td>
+      <td style="color:${r.conv!==null?(r.conv>0.02?'#4ade80':'#fb923c'):'#6b7894'};font-weight:600;">${r.conv !== null ? fmtPct(r.conv) : "—"}</td>
+      <td style="color:${r.cpr!==null?'#5b8def':'#6b7894'};">${r.cpr !== null ? fmt$(r.cpr) : "—"}</td>
+      <td style="color:${r.cpl!==null?'#4dd0e1':'#6b7894'};font-weight:600;">${r.cpl !== null ? fmt$(r.cpl) : "—"}</td>
+      <td style="color:#c9d4e8;">${r.contracts !== null ? fmtN(r.contracts) : "—"}</td>
+      <td style="color:${r.cpContract!==null?'#5b8def':'#6b7894'};">${r.cpContract !== null ? fmt$(r.cpContract) : "—"}</td>
+      <td style="color:${r.roi!==null?(r.roi>0?'#4ade80':'#f87171'):'#6b7894'};font-weight:600;">${r.roi !== null ? r.roi.toFixed(0)+"%" : "—"}</td>
+    </tr>`).join("");
+  const blendedCPL = (totSpend>0 && totLeads>0) ? totSpend/totLeads : null;
+  const blendedCPR = (totSpend>0 && totRec>0) ? totSpend/totRec : null;
+  const blendedConv = (totRec>0) ? totLeads/totRec : null;
+  const blendedCPC = (totSpend>0 && totContracts>0) ? totSpend/totContracts : null;
+  html += `<tr class="total"><td class="left">TOTAL / BLENDED</td><td>${fmt$(totSpend)}</td><td>${fmtN(totRec)}</td><td>${fmtN(totLeads)}</td><td>${blendedConv !== null ? fmtPct(blendedConv) : "—"}</td><td>${blendedCPR !== null ? fmt$(blendedCPR) : "—"}</td><td>${blendedCPL !== null ? fmt$(blendedCPL) : "—"}</td><td>${fmtN(totContracts)}</td><td>${blendedCPC !== null ? fmt$(blendedCPC) : "—"}</td><td>—</td></tr></tbody>`;
+  tEl.innerHTML = html;
+}
+
+function renderCPLChart() {
+  const mkt = state.marketing, kpi = state.kpi; if (!mkt || !kpi) return;
+  const channels = ["Bulk Calling","Niche Calling","Direct Mail","Website/SEO"];
+  const cplVals = channels.map(ch => { const s = mkt.byChannel[ch] || 0; const l = kpi.leadsByChannel[ch] || 0; return l > 0 ? +(s/l).toFixed(2) : 0; });
+  charts.cpl = new Chart(document.getElementById("cplChart"), {
+    type: "bar",
+    data: { labels: channels, datasets: [{ label: "Cost per Lead Pushed", data: cplVals, backgroundColor: channels.map(c => CHANNEL_COLORS[c] || "#8a96b0"), borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: "#0a0e1a", borderColor: "#2a3651", borderWidth: 1, titleColor: "#fff", bodyColor: "#c9d4e8", padding: 12, callbacks: { label: c => "CPL: " + fmt$(c.raw) } } },
+      scales: { x: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 } }, grid: { display: false } },
+                y: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 }, callback: v => fmt$(v) }, grid: { color: "#1c2538" } } }
+    }
+  });
+  const cprVals = channels.map(ch => { const s = mkt.byChannel[ch] || 0; const r = kpi.recordsByChannel[ch] || 0; return r > 0 ? +(s/r).toFixed(2) : 0; });
+  charts.cpr = new Chart(document.getElementById("cprChart"), {
+    type: "bar",
+    data: { labels: channels, datasets: [{ label: "Cost per Record", data: cprVals, backgroundColor: channels.map(c => (CHANNEL_COLORS[c]||"#8a96b0")+"99"), borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: "#0a0e1a", borderColor: "#2a3651", borderWidth: 1, titleColor: "#fff", bodyColor: "#c9d4e8", padding: 12, callbacks: { label: c => "Cost per Record: " + fmt$(c.raw) } } },
+      scales: { x: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 } }, grid: { display: false } },
+                y: { ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 }, callback: v => fmt$(v) }, grid: { color: "#1c2538" } } }
+    }
+  });
+}
+
+function renderBreakeven() {
+  const mkt = state.marketing, kpi = state.kpi;
+  const grid = document.getElementById("beGrid"); const paceT = document.getElementById("paceTable"); const narr = document.getElementById("beNarrative");
+  if (!mkt) { grid.innerHTML = `<div class="be-box" style="grid-column: span 2; text-align:center;"><div class="sub">Load marketing spend.</div></div>`; narr.textContent = ""; paceT.innerHTML = ""; return; }
+  const dealSize = getAvgDealSize();
+  const totalSpend = mkt.totals.total; const daysCovered = mkt.totals.daysCovered;
+  const runRate = totalSpend * 365 / daysCovered;
+  const monthlyAvg = totalSpend / (daysCovered / 30.4);
+  const dealsNeededAnnual = Math.ceil(runRate / dealSize);
+  const dealsNeededMonthly = Math.ceil(monthlyAvg / dealSize);
+  const closedSoFar = kpi ? kpi.totals.closedTotal : null;
+  const closedProjectedAnnual = closedSoFar !== null ? Math.round(closedSoFar * 365 / daysCovered) : null;
+  const gap = (closedProjectedAnnual !== null) ? (closedProjectedAnnual - dealsNeededAnnual) : null;
+  grid.innerHTML = `
+    <div class="be-box"><div class="lbl">DEALS NEEDED / YEAR TO BREAK EVEN</div><div class="val v-gold">${dealsNeededAnnual}</div><div class="sub">At ${fmt$k(dealSize)} avg deal size vs. ${fmt$k(runRate)} annualized spend.</div></div>
+    <div class="be-box"><div class="lbl">DEALS NEEDED / MONTH</div><div class="val v-cyan">${dealsNeededMonthly}</div><div class="sub">Monthly break-even at current run-rate.</div></div>
+    <div class="be-box"><div class="lbl">PROJECTED CLOSED / YEAR</div><div class="val ${closedProjectedAnnual !== null ? (gap >= 0 ? 'v-green' : 'v-red') : 'v-purple'}">${closedProjectedAnnual !== null ? closedProjectedAnnual : "—"}</div><div class="sub">${closedSoFar !== null ? `${closedSoFar} closed in ${daysCovered} days, extrapolated.` : "Load KPI data."}</div></div>
+    <div class="be-box"><div class="lbl">GAP TO BREAK EVEN</div><div class="val ${gap !== null ? (gap >= 0 ? 'v-green' : 'v-red') : 'v-purple'}">${gap !== null ? (gap >= 0 ? '+' : '') + gap : "—"}</div><div class="sub">${gap !== null ? (gap >= 0 ? "You're ahead." : `${Math.abs(gap)} more deals/year needed.`) : "Need KPI data."}</div></div>`;
+  if (closedProjectedAnnual !== null) {
+    narr.innerHTML = gap >= 0
+      ? `Current pace: ${closedSoFar} closes in ${daysCovered} days → projected <strong style="color:#4ade80;">${closedProjectedAnnual} deals this year</strong>. Break-even at ${fmt$k(dealSize)}/deal is ${dealsNeededAnnual}. Ahead by ${gap} → about <strong style="color:#4ade80;">${fmt$k(gap * dealSize)}</strong> projected surplus.`
+      : `Projected <strong style="color:#fb923c;">${closedProjectedAnnual} deals</strong> against break-even of <strong>${dealsNeededAnnual}</strong>. Levers: cut spend, improve conversion (records→closed is ${((kpi.totals.closedTotal/Math.max(1,kpi.totals.totalRecords))*100).toFixed(2)}%), or raise avg deal size from ${fmt$k(dealSize)} to ${fmt$k(runRate/Math.max(1,closedProjectedAnnual))}.`;
+  } else { narr.innerHTML = "Load KPI data to see projected pace and gap analysis."; }
+  if (kpi) {
+    const scenarios = [
+      { label: "Current pace",                closes: closedProjectedAnnual, dealSize: dealSize },
+      { label: "+10% conversion lift",        closes: Math.round(closedProjectedAnnual * 1.1), dealSize: dealSize },
+      { label: "+25% conversion lift",        closes: Math.round(closedProjectedAnnual * 1.25), dealSize: dealSize },
+      { label: "Raise avg deal size to $35K", closes: closedProjectedAnnual, dealSize: 35000 },
+      { label: "Raise avg deal size to $50K", closes: closedProjectedAnnual, dealSize: 50000 }
+    ];
+    paceT.innerHTML = `<thead><tr><th class="left">SCENARIO</th><th>PROJECTED CLOSES</th><th>AVG DEAL SIZE</th><th>PROJECTED REVENUE</th><th>ANNUAL SPEND</th><th>PROFIT</th><th>MARGIN</th></tr></thead><tbody>
+      ${scenarios.map(s => { const rev = s.closes * s.dealSize; const profit = rev - runRate; const margin = (profit / rev * 100) || 0;
+        return `<tr><td class="left">${s.label}</td><td>${s.closes}</td><td>${fmt$k(s.dealSize)}</td><td style="color:#4dd0e1;">${fmt$k(rev)}</td><td style="color:#fb923c;">${fmt$k(runRate)}</td><td style="color:${profit>=0?'#4ade80':'#f87171'};font-weight:600;">${profit>=0?'+':''}${fmt$k(profit)}</td><td style="color:${margin>=0?'#4ade80':'#f87171'};">${margin.toFixed(1)}%</td></tr>`;
+      }).join("")}</tbody>`;
+  } else { paceT.innerHTML = ""; }
+}
+
+function renderInsights() {
+  const el = document.getElementById("insightsReport");
+  const mkt = state.marketing, kpi = state.kpi;
+  if (!mkt && !kpi) { el.innerHTML = '<div style="text-align:center;color:#6b7894;padding:40px;">Load data to generate insights.</div>'; return; }
+  const dealSize = getAvgDealSize();
+  const spend = mkt ? mkt.totals.marketing : 0;
+  const totalSpend = mkt ? mkt.totals.total : 0;
+  const days = mkt ? mkt.totals.daysCovered : 120;
+  const records = kpi ? kpi.totals.totalRecords : 0;
+  const leads = kpi ? kpi.totals.totalLeads : 0;
+  const qualified = kpi ? kpi.totals.qualified : 0;
+  const offers = kpi ? kpi.totals.offersMade : 0;
+  const appts = kpi ? kpi.totals.apptsRan : 0;
+  const contracts = kpi ? kpi.totals.contractsTotal : 0;
+  const closed = kpi ? kpi.totals.closedTotal : 0;
+  const runRate = totalSpend * 365 / days;
+  const dealsNeeded = Math.ceil(runRate / dealSize);
+  const projectedDeals = closed > 0 ? Math.round(closed * 365 / days) : 0;
+  const revenue = closed * dealSize;
+  const netProfit = revenue - totalSpend;
+  const roi = totalSpend > 0 ? ((revenue - totalSpend) / totalSpend * 100) : 0;
+  const blendedCPL = leads > 0 && spend > 0 ? spend / leads : 0;
+  const supportSpend = (mkt && mkt.byChannel["List"] ? mkt.byChannel["List"] : 0) + (mkt && mkt.byChannel["Skip Tracing"] ? mkt.byChannel["Skip Tracing"] : 0);
+  const trueCPL = leads > 0 && (spend + supportSpend) > 0 ? (spend + supportSpend) / leads : 0;
+  const channels = ["Bulk Calling","Niche Calling","Direct Mail","Website/SEO"];
+  const chData = channels.map(ch => {
+    const s = mkt && mkt.byChannel[ch] ? mkt.byChannel[ch] : 0;
+    const r = kpi && kpi.recordsByChannel[ch] !== undefined ? kpi.recordsByChannel[ch] : 0;
+    const l = kpi && kpi.leadsByChannel[ch] !== undefined ? kpi.leadsByChannel[ch] : 0;
+    const ct = kpi && kpi.contractsByChannel[ch] !== undefined ? kpi.contractsByChannel[ch] : 0;
+    const cl = kpi && kpi.closedByChannel[ch] !== undefined ? kpi.closedByChannel[ch] : 0;
+    const cpl = l > 0 && s > 0 ? s / l : null;
+    const conv = r > 0 ? l / r : null;
+    const chRoi = cl > 0 && s > 0 ? ((cl * dealSize - s) / s * 100) : null;
+    return { ch, spend: s, records: r, leads: l, contracts: ct, closed: cl, cpl, conv, roi: chRoi };
+  });
+  const offerToAppt = offers > 0 ? appts / offers : 0;
+  const apptToContract = appts > 0 ? contracts / appts : 0;
+  const contractToClose = contracts > 0 ? closed / contracts : 0;
+  const funnelStages = [
+    { name: "Records", val: records, next: leads, nextName: "Leads" },
+    { name: "Leads", val: leads, next: qualified, nextName: "Qualified" },
+    { name: "Qualified", val: qualified, next: offers, nextName: "Offers" },
+    { name: "Offers", val: offers, next: appts, nextName: "Appts" },
+    { name: "Appts", val: appts, next: contracts, nextName: "Contracts" },
+    { name: "Contracts", val: contracts, next: closed, nextName: "Closed" }
+  ];
+  let worstStage = null, worstRate = 1;
+  funnelStages.forEach(s => { if (s.val > 0 && s.next >= 0) { const r = s.next / s.val; if (r < worstRate && s.val > 0) { worstRate = r; worstStage = s; } } });
+  const insights = [];
+  const bestROICh = chData.filter(c => c.roi !== null).sort((a, b) => b.roi - a.roi)[0];
+  if (bestROICh) {
+    const chRev = bestROICh.closed * dealSize;
+    insights.push({ tag: "HIGHEST ROI CHANNEL", tagClass: "tag-green", text: `<strong>${bestROICh.ch}</strong> is your highest-ROI channel at <span class="num">${bestROICh.roi.toFixed(0)}%</span> return. ${fmt$(bestROICh.spend)} in spend generated <span class="num">${bestROICh.closed}</span> closing${bestROICh.closed > 1 ? 's' : ''} worth <span class="num">${fmt$(chRev)}</span> in revenue.`, action: bestROICh.cpl && bestROICh.cpl > 500 ? `<strong>ACTION:</strong> CPL is high (${fmt$(bestROICh.cpl)}) but close rate justifies it. Consider increasing ${bestROICh.ch} budget by 20% — at current close rates, every additional ${fmt$(bestROICh.cpl * (bestROICh.leads > 0 ? bestROICh.closed / bestROICh.leads : 0.1) < 1 ? Math.ceil(1 / (bestROICh.closed / bestROICh.leads)) : 5)} leads could yield another closing worth ${fmt$(dealSize)}.` : null });
+  }
+  if (worstStage && worstStage.val > 0) {
+    const currentRate = (worstRate * 100).toFixed(1);
+    const improvedRate = Math.min(worstRate + 0.10, 0.95);
+    const currentOut = worstStage.next;
+    const improvedOut = Math.round(worstStage.val * improvedRate);
+    const extraOut = improvedOut - currentOut;
+    let downstreamMultiplier = 1;
+    let found = false;
+    funnelStages.forEach(s => { if (found && s.val > 0) downstreamMultiplier *= (s.next / s.val); if (s.name === worstStage.nextName) found = true; });
+    const extraDeals = Math.max(0, Math.round(extraOut * (found ? downstreamMultiplier : (closed / Math.max(1, worstStage.next)))));
+    const extraRevenue = extraDeals * dealSize;
+    insights.push({ tag: "BIGGEST BOTTLENECK", tagClass: "tag-amber", text: `<strong>${worstStage.name} → ${worstStage.nextName}</strong> is your weakest conversion at <span class="num">${currentRate}%</span>. Only <span class="num">${fmtN(currentOut)}</span> of <span class="num">${fmtN(worstStage.val)}</span> made it through.`, action: `<strong>ACTION:</strong> Raise this from ${currentRate}% to ${(improvedRate * 100).toFixed(0)}% → <span style="color:#4ade80;">+${fmtN(extraOut)} more ${worstStage.nextName.toLowerCase()}</span>. Downstream impact: ~<span style="color:#4ade80;">+${extraDeals} additional deal${extraDeals !== 1 ? 's' : ''}/year</span> = <span style="color:#4ade80;">+${fmt$(extraRevenue)}</span> in revenue.` });
+  }
+  const noCloseCh = chData.filter(c => c.leads >= 10 && c.closed === 0 && c.spend > 2000);
+  noCloseCh.forEach(c => {
+    insights.push({ tag: `${c.ch.toUpperCase()} — NO CLOSINGS`, tagClass: "tag-cyan", text: `${c.ch} has <span class="num">${fmtN(c.leads)} leads</span> and <span class="num">${fmt$(c.spend)}</span> spent but zero closings YTD. That's ${fmt$(c.cpl)} per lead with no deal attribution yet.`, action: `<strong>ACTION:</strong> Audit ${c.ch} pipeline — are leads stuck between qualified and offer? If these leads have a longer cycle, track time-to-contract. If conversion is structurally low, reallocate spend to channels that close.` });
+  });
+  if (supportSpend > 0 && spend > 0) {
+    const pct = ((supportSpend / spend) * 100).toFixed(1);
+    insights.push({ tag: "SUPPORT COST LOAD", tagClass: pct > 30 ? "tag-red" : "tag-amber", text: `List purchasing + skip tracing total <span class="num">${fmt$(supportSpend)}</span> — that's <span class="num">${pct}%</span> of direct marketing spend. These costs enable all channels but inflate your true blended CPL from ${fmt$(blendedCPL)} to <span class="num">${fmt$(trueCPL)}</span>.`, action: `<strong>ACTION:</strong> Review list vendors. Are you paying for records that never convert? Track CPL inclusive of list cost per channel to see true acquisition cost.` });
+  }
+  if (projectedDeals > 0 && dealsNeeded > 0) {
+    const gap = projectedDeals - dealsNeeded;
+    if (gap >= 0) {
+      insights.push({ tag: "ABOVE BREAK-EVEN", tagClass: "tag-green", text: `At <span class="num">${fmt$(runRate)}</span> annualized spend and <span class="num">${fmt$(dealSize)}</span> avg deal, you need <span class="num">${dealsNeeded} deals/year</span>. You're pacing <span class="num">${projectedDeals}</span> — that's <span class="num">+${gap} above break-even</span>.`, action: `<strong>ACTION:</strong> Surplus margin of ~${fmt$(gap * dealSize)} projected annual profit. Consider reinvesting in your highest-ROI channel, or build a cash reserve for months with no closings.` });
+    } else {
+      insights.push({ tag: "BELOW BREAK-EVEN", tagClass: "tag-red", text: `You need <span class="num">${dealsNeeded} deals/year</span> to break even but you're pacing <span class="num">${projectedDeals}</span>. That's a gap of <span class="num">${Math.abs(gap)} deals</span>.`, action: `<strong>ACTION:</strong> Close the gap by either (1) reducing spend by ${fmt$(Math.abs(gap) * dealSize)}/year or (2) improving funnel conversion to produce ${Math.abs(gap)} more deals from existing spend.` });
+    }
+  }
+  if (offerToAppt > 0 && offerToAppt < 0.5 && offers >= 10) {
+    const target = 0.40;
+    const extra = Math.round(offers * target) - appts;
+    if (extra > 0) {
+      const extraContracts = Math.round(extra * apptToContract);
+      const extraClosed = Math.round(extraContracts * contractToClose);
+      if (extraClosed > 0) {
+        insights.push({ tag: "OFFER → APPT LEVER", tagClass: "tag-amber", text: `You're converting <span class="num">${(offerToAppt*100).toFixed(1)}%</span> of offers to appointments. This is a seller engagement issue — not a marketing problem.`, action: `<strong>ACTION:</strong> Target 40% offer→appt rate. That's <span style="color:#4ade80;">+${extra} more appointments</span> from the same 95 offers → ~<span style="color:#4ade80;">+${extraClosed} more deal${extraClosed > 1 ? 's' : ''}/year</span> = <span style="color:#4ade80;">+${fmt$(extraClosed * dealSize)}</span>. Tactics: structured follow-up cadence after offers, appointment confirmation sequences, reduce time between offer and walkthrough.` });
+      }
+    }
+  }
+  let html = '';
+  html += '<div class="ins-section"><div class="ins-section-title">THE BIG PICTURE · ' + (mkt ? mkt.periodStart + ' – ' + mkt.periodEnd : 'YTD') + '</div>';
+  html += '<div class="ins-grid ins-grid-4">';
+  html += `<div class="ins-card"><div class="lbl">TOTAL ALL-IN SPEND</div><div class="val v-cyan">${fmt$(totalSpend)}</div><div class="sub">${days} days covered</div></div>`;
+  html += `<div class="ins-card"><div class="lbl">REVENUE (${closed} CLOSED)</div><div class="val v-green">${fmt$(revenue)}</div><div class="sub">at ${fmt$k(dealSize)} avg deal</div></div>`;
+  html += `<div class="ins-card"><div class="lbl">NET PROFIT</div><div class="val ${netProfit >= 0 ? 'v-green' : 'v-red'}">${fmt$(netProfit)}</div><div class="sub">Revenue − all-in spend</div></div>`;
+  html += `<div class="ins-card"><div class="lbl">ROI</div><div class="val ${roi >= 0 ? 'v-green' : 'v-red'}">${roi.toFixed(0)}%</div><div class="sub">${contracts - closed > 0 ? '+' + (contracts - closed) + ' under contract' : ''}</div></div>`;
+  html += '</div></div>';
+  html += '<div class="ins-section"><div class="ins-section-title cyan">CHANNEL ECONOMICS · RANKED BY ROI POTENTIAL</div>';
+  const sorted = [...chData].sort((a, b) => (b.roi || -999) - (a.roi || -999));
+  const maxLeads = Math.max(...chData.map(c => c.leads), 1);
+  sorted.forEach(c => {
+    const w = Math.max(3, (c.leads / maxLeads) * 100);
+    const color = CHANNEL_COLORS[c.ch] || "#8a96b0";
+    const dealLabel = c.closed > 0 ? `<span style="color:#4ade80;font-weight:700;">${c.closed} closed</span>` : c.contracts > 0 ? `<span style="color:#d4a82c;">${c.contracts} UC</span>` : '<span style="color:#6b7894;">—</span>';
+    html += `<div class="ins-ch-row"><span style="color:#e3e9f5;font-weight:600;">${c.ch}</span><div class="bar-w"><div class="bar-f" style="width:${w}%;background:${color};"></div></div><span style="text-align:right;color:${c.cpl ? '#e3e9f5' : '#6b7894'};">${c.cpl ? fmt$(c.cpl) : '—'}</span><span style="text-align:right;">${dealLabel}</span><span style="text-align:right;color:${c.roi !== null ? (c.roi > 0 ? '#4ade80' : '#f87171') : '#6b7894'};font-weight:700;">${c.roi !== null ? c.roi.toFixed(0) + '%' : '—'}</span></div>`;
+  });
+  html += '<div style="display:grid;grid-template-columns:110px 1fr 70px 80px 90px;gap:8px;padding:4px 12px;font-family:SF Mono,monospace;font-size:9px;color:#6b7894;letter-spacing:1px;"><span>CHANNEL</span><span>LEADS</span><span style="text-align:right">CPL</span><span style="text-align:right">DEALS</span><span style="text-align:right">ROI</span></div>';
+  html += '</div>';
+  html += '<div class="ins-section"><div class="ins-section-title gold">FUNNEL CONVERSION CHAIN</div>';
+  const maxFunnel = Math.max(records, leads, 1);
+  funnelStages.forEach(s => {
+    const rate = s.val > 0 ? s.next / s.val : 0;
+    const rateStr = s.val > 0 ? (rate * 100).toFixed(1) + '%' : '—';
+    const rateColor = rate === 0 ? '#6b7894' : rate < 0.02 ? '#f87171' : rate < 0.1 ? '#fb923c' : '#4ade80';
+    const w = Math.max(2, (s.val / maxFunnel) * 100);
+    html += `<div style="display:grid;grid-template-columns:100px 1fr 70px 60px;align-items:center;gap:8px;padding:6px 12px;font-family:SF Mono,monospace;font-size:12px;"><span style="color:#e3e9f5;">${s.name}</span><div class="bar-w" style="height:14px;"><div class="bar-f" style="width:${w}%;background:linear-gradient(90deg,#4dd0e1,#4ade80);border-radius:3px;"></div></div><span style="text-align:right;color:#e3e9f5;font-weight:700;">${fmtN(s.val)}</span><span style="text-align:right;color:${rateColor};">→ ${rateStr}</span></div>`;
+  });
+  html += '<div style="display:grid;grid-template-columns:100px 1fr 70px 60px;align-items:center;gap:8px;padding:6px 12px;font-family:SF Mono,monospace;font-size:12px;"><span style="color:#d4a82c;font-weight:700;">Closed</span><div></div><span style="text-align:right;color:#d4a82c;font-weight:700;">${fmtN(closed)}</span><span></span></div>'.replace('${fmtN(closed)}', fmtN(closed));
+  html += '</div>';
+  html += '<div class="ins-section"><div class="ins-section-title">BREAK-EVEN</div>';
+  html += '<div class="ins-grid ins-grid-3">';
+  html += `<div class="ins-card"><div class="lbl">ANNUAL BURN RATE</div><div class="val v-cyan">${fmt$k(runRate)}</div><div class="sub">${fmt$(totalSpend)} × 365/${days} days</div></div>`;
+  html += `<div class="ins-card"><div class="lbl">DEALS TO BREAK EVEN</div><div class="val v-gold">${dealsNeeded}</div><div class="sub">at ${fmt$k(dealSize)} per deal</div></div>`;
+  html += `<div class="ins-card"><div class="lbl">CURRENT PACE</div><div class="val ${projectedDeals >= dealsNeeded ? 'v-green' : 'v-red'}">${projectedDeals}</div><div class="sub">deals/yr projected</div></div>`;
+  html += '</div></div>';
+  html += '<div class="ins-section"><div class="ins-section-title red">STRATEGIC INSIGHTS & ACTION ITEMS</div>';
+  insights.forEach(ins => {
+    html += `<div class="ins-insight"><div class="tag ${ins.tagClass}">${ins.tag}</div><p>${ins.text}</p>${ins.action ? '<div class="action">' + ins.action + '</div>' : ''}</div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderAll() {
+  destroyCharts(); renderSources(); if (!renderEmptyOrMain()) return;
+  renderTiles(); renderFunnel(); renderRecordsChart(); renderUnitEconTable(); renderCPLChart(); renderBreakeven(); renderInsights();
+}
+
+function persist() { /* in-memory only — no localStorage in Cowork artifacts */ }
+function hydrate() { /* data comes from Google Sheet sync or paste */ }
+
+function openRefreshModal() { document.getElementById("refreshModal").classList.add("show"); document.getElementById("pasteArea").value = ""; setDetect("idle", "Awaiting input…"); }
+function closeRefreshModal() { document.getElementById("refreshModal").classList.remove("show"); }
+function setDetect(kind, msg) { const d = document.getElementById("detectMsg"); d.className = "modal-detect " + kind; d.textContent = msg; const apply = document.getElementById("applyBtn"); apply.disabled = kind !== "ok"; apply.style.opacity = kind === "ok" ? "1" : "0.4"; }
+let pending = null;
+function detectInput() {
+  const txt = document.getElementById("pasteArea").value;
+  if (!txt.trim()) { setDetect("idle", "Awaiting input…"); pending = null; return; }
+  try {
+    const d = detectType(txt);
+    if (!d) { setDetect("err", "Couldn't detect format."); pending = null; return; }
+    pending = d;
+    const label = d.kind === "transactions" ? "TRANSACTIONS" : d.kind === "attribution" ? "SIFT ATTRIBUTION" : "KPI FUNNEL";
+    const count = d.kind === "kpi" ? d.parsed.length : d.parsed.rows.length;
+    setDetect("ok", `✓ Detected ${label} — ${count} rows ready`);
+  } catch(e) { setDetect("err", "Parse error: " + e.message); pending = null; }
+}
+function applyPaste() {
+  if (!pending) return;
+  try {
+    if (pending.kind === "transactions") { state.marketing = processTransactions(pending.parsed.rows); state.marketingSource = "paste"; }
+    else if (pending.kind === "attribution") { state.attribution = processAttribution(pending.parsed.rows); state.attributionSource = "paste"; }
+    else if (pending.kind === "kpi") { state.kpi = processKPI(pending.parsed); state.kpiSource = "paste"; }
+    state.updatedAt = new Date().toISOString();
+    persist(); renderAll(); closeRefreshModal();
+  } catch(e) { setDetect("err", "Apply failed: " + e.message); }
+}
+function resetData() {
+  if (!confirm("Clear all loaded data?")) return;
+  state = { marketing: DEFAULT_MARKETING, marketingSource: "baked", kpi: DEFAULT_KPI, kpiSource: "baked", attribution: null, attributionSource: "missing", updatedAt: null, lastSyncAt: null };
+  renderAll();
+}
+
+(async function init() {
+  await syncFromSiblings(true);
+  renderAll();
+})();
+document.querySelectorAll("#view-tabs .tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll("#view-tabs .tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.getElementById("tab-" + t.dataset.tab).classList.add("active");
+  });
+});
+</script>
+
+<div style="text-align:center; padding:20px; font-size:11px; color:#3a4a6a; border-top:1px solid #1c2538; margin-top:20px;">DNT Home Buyers · Unit Economics · Auto-refreshes KPI data from Google Sheet · <a href="index.html" style="color:#4ade80; text-decoration:none;">← Back to Hub</a></div>
+
+</body>
+</html>
