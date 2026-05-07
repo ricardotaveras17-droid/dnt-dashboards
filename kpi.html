@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DNT Home Buyers â Weekly KPIs</title>
+<title>DNT Home Buyers — Weekly KPIs</title>
 <style>
 :root { color-scheme: light; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -70,7 +70,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 
 <div class="top-bar">
   <div>
-    <h1>DNT HOME BUYERS â WEEKLY KPIs</h1>
+    <h1>DNT HOME BUYERS — WEEKLY KPIs</h1>
     <div class="sub" id="statusLine">Loading data from Google Sheet...</div>
   </div>
   <div class="week-pick">
@@ -93,7 +93,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
   // === CONFIG ===
   var SHEET_ID = '1qc1mcyI8lY7wXRssNTbgJzez0eOz06qmmeMsiMcPb9U';
   var SHEET_NAME = 'Weekly Log';
-  // Use Google Visualization JSONP endpoint â works from file:// (no CORS)
+  // Use Google Visualization JSONP endpoint — works from file:// (no CORS)
   var JSONP_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(SHEET_NAME);
 
   // Column order from the Weekly Log header row
@@ -103,7 +103,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 
   // === HELPERS ===
   function num(v) { if (v == null || v === '') return 0; var n = parseFloat(String(v).replace(/[$,%]/g, '').replace(/,/g, '')); return isNaN(n) ? 0 : n; }
-  function fmt(n) { if (n == null) return 'â'; return n.toLocaleString('en-US', {maximumFractionDigits: 0}); }
+  function fmt(n) { if (n == null) return '—'; return n.toLocaleString('en-US', {maximumFractionDigits: 0}); }
   function pct(n) { return n.toFixed(1) + '%'; }
   function dollar(n) { return '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
@@ -155,7 +155,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
     var changeHtml = '';
     if (changeVal != null && changeVal !== 0) {
       var dir = changeVal > 0 ? 'up' : 'down';
-      var arrow = changeVal > 0 ? 'â²' : 'â¼';
+      var arrow = changeVal > 0 ? '▲' : '▼';
       changeHtml = '<div class="change ' + dir + '">' + arrow + ' ' + Math.abs(changeVal).toFixed(1) + '% vs prior week</div>';
     }
 
@@ -185,7 +185,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
     var html = '';
 
     // RECORDS
-    html += '<div class="section-title">Week ' + weekNum + ' â Records / Mail Sent</div>';
+    html += '<div class="section-title">Week ' + weekNum + ' — Records / Mail Sent</div>';
     html += '<div class="kpi-grid">';
     html += card('Niche Records', num(d.nicheRec), 'num', null, pc ? wow(num(d.nicheRec), num(priorWeek.nicheRec)) : null);
     html += card('Bulk Records', num(d.bulkRec), 'num', null, pc ? wow(num(d.bulkRec), num(priorWeek.bulkRec)) : null);
@@ -196,7 +196,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
     html += '</div>';
 
     // LEADS
-    html += '<div class="section-title cyan">Leads / Responses (â Sift)</div>';
+    html += '<div class="section-title cyan">Leads / Responses (→ Sift)</div>';
     html += '<div class="kpi-grid">';
     html += card('Niche Leads', num(d.nicheLeads), 'num', num(d.nicheRec) > 0 ? pct((num(d.nicheLeads)/num(d.nicheRec))*100) + ' of records' : null);
     html += card('Bulk Leads', num(d.bulkLeads), 'num', num(d.bulkRec) > 0 ? pct((num(d.bulkLeads)/num(d.bulkRec))*100) + ' of records' : null);
@@ -279,7 +279,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
     document.getElementById('main').innerHTML = html;
   }
 
-  // === LOAD DATA (JSONP â works from file:// and any origin) ===
+  // === LOAD DATA (JSONP — works from file:// and any origin) ===
   window._gvizCallback = function() {}; // placeholder
   window.loadData = function() {
     document.getElementById('main').innerHTML = '<div class="loading" id="loader"><div class="spinner"></div><p>Pulling latest numbers from the KPI Tracker...</p></div>';
@@ -293,7 +293,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
     var script = document.createElement('script');
     script.id = 'gviz-loader';
     script.onerror = function() {
-      document.getElementById('main').innerHTML = '<div class="error-box"><h3>Could Not Load Data</h3><p>Failed to reach Google Sheets. Check your internet connection and make sure the sheet is published to the web.</p><p style="margin-top:12px;"><strong>File â Share â Publish to web â Entire document â Publish</strong></p></div>';
+      document.getElementById('main').innerHTML = '<div class="error-box"><h3>Could Not Load Data</h3><p>Failed to reach Google Sheets. Check your internet connection and make sure the sheet is published to the web.</p><p style="margin-top:12px;"><strong>File → Share → Publish to web → Entire document → Publish</strong></p></div>';
       document.getElementById('statusLine').textContent = 'Error loading data';
     };
 
@@ -344,7 +344,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
         sel.onchange = function() { render(Number(sel.value)); };
 
         var latest = weekNums[weekNums.length - 1];
-        document.getElementById('statusLine').textContent = 'Showing Week ' + latest + ' Â· ' + weekNums.length + ' weeks loaded Â· Last refreshed ' + new Date().toLocaleTimeString();
+        document.getElementById('statusLine').textContent = 'Showing Week ' + latest + ' · ' + weekNums.length + ' weeks loaded · Last refreshed ' + new Date().toLocaleTimeString();
         render(latest);
       } catch(err) {
         document.getElementById('main').innerHTML = '<div class="error-box"><h3>Could Not Load Data</h3><p>' + err.message + '</p></div>';
