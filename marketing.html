@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNT Marketing Command Center</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0e1a; color: #c9d4e8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding: 24px; }
+  .mono { font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 24px; border-bottom: 1px solid #1c2538; gap: 24px; flex-wrap: wrap; }
+  .brand { font-family: "SF Mono", monospace; font-size: 11px; color: #d4a82c; letter-spacing: 2px; }
+  .h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-top: 4px; letter-spacing: -0.5px; }
+  .subtitle { font-size: 13px; color: #6b7894; margin-top: 6px; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .header-stats { text-align: right; font-family: "SF Mono", monospace; }
+  .header-stats .label { font-size: 10px; color: #6b7894; letter-spacing: 1.5px; }
+  .header-stats .big { font-size: 24px; color: #4dd0e1; font-weight: 700; margin-top: 4px; }
+  .header-stats .big .gold { color: #d4a82c; }
+  .header-stats .big .label-inline { font-size: 11px; color: #6b7894; font-weight: 400; }
+  .header-stats .small { font-size: 11px; color: #6b7894; margin-top: 4px; }
+  .header-buttons { display: flex; gap: 8px; }
+  .btn { font-family: "SF Mono", monospace; font-size: 10px; letter-spacing: 1.5px; padding: 7px 14px; border: 1px solid #2a3651; border-radius: 4px; background: #131929; color: #c9d4e8; cursor: pointer; transition: all 0.15s; font-weight: 600; }
+  .btn:hover { border-color: #d4a82c; color: #d4a82c; }
+  .btn-primary { background: #d4a82c; border-color: #d4a82c; color: #0a0e1a; }
+  .btn-primary:hover { background: #e6b94a; border-color: #e6b94a; color: #0a0e1a; }
+  .btn-ghost { background: transparent; }
+  .btn-danger { color: #f87171; }
+  .btn-danger:hover { border-color: #f87171; }
+  .controls { display: flex; gap: 48px; margin-top: 24px; align-items: center; flex-wrap: wrap; }
+  .control-group .label { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .tabs { display: flex; gap: 8px; }
+  .tab { padding: 8px 16px; background: #131929; border: 1px solid #1c2538; border-radius: 6px; font-size: 13px; color: #8a96b0; cursor: pointer; transition: all 0.15s; }
+  .tab:hover { color: #c9d4e8; border-color: #2a3651; }
+  .tab.active { background: #d4a82c; color: #0a0e1a; border-color: #d4a82c; font-weight: 600; }
+  .tab.active.blue { background: #4361d9; color: #ffffff; border-color: #4361d9; }
+  .data-status { margin-top: 16px; padding: 10px 14px; border-radius: 6px; font-family: "SF Mono", monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .data-status.fresh { background: rgba(77,222,128,0.08); border: 1px solid rgba(77,222,128,0.3); color: #4ade80; }
+  .data-status.baked { background: rgba(107,120,148,0.08); border: 1px solid #2a3651; color: #8a96b0; }
+  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-top: 24px; }
+  .tile { background: #131929; border: 1px solid #1c2538; border-radius: 8px; padding: 18px; }
+  .tile .label { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; }
+  .tile .value { font-size: 26px; font-weight: 700; margin-top: 8px; font-family: "SF Mono", monospace; }
+  .tile .sub { font-size: 11px; color: #6b7894; margin-top: 6px; }
+  .v-cyan { color: #4dd0e1; } .v-blue { color: #5b8def; } .v-green { color: #4ade80; }
+  .v-orange { color: #fb923c; } .v-purple { color: #c084fc; } .v-gold { color: #d4a82c; } .v-red { color: #f87171; }
+  .row { display: grid; gap: 16px; margin-top: 16px; }
+  .row-2 { grid-template-columns: 2fr 1fr; }
+  .row-1 { grid-template-columns: 1fr; }
+  .card { background: #131929; border: 1px solid #1c2538; border-radius: 8px; padding: 20px; }
+  .card-title { font-family: "SF Mono", monospace; font-size: 11px; color: #6b7894; letter-spacing: 1.5px; margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 320px; }
+  .chart-wrap-tall { position: relative; height: 380px; }
+  .funnel-row { margin-bottom: 14px; }
+  .funnel-label-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .funnel-label { font-family: "SF Mono", monospace; font-size: 10px; color: #8a96b0; letter-spacing: 1px; }
+  .funnel-value { font-family: "SF Mono", monospace; font-size: 12px; color: #ffffff; font-weight: 600; }
+  .funnel-bar { height: 6px; background: #1c2538; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .funnel-fill { height: 100%; border-radius: 3px; }
+  .vendor-list { display: flex; flex-direction: column; gap: 10px; max-height: 600px; overflow-y: auto; padding-right: 4px; }
+  .vendor-row { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: center; padding: 10px 12px; background: #0d1322; border-radius: 6px; border-left: 3px solid #1c2538; }
+  .vendor-row.high { border-left-color: #f87171; }
+  .vendor-row.medium { border-left-color: #d4a82c; }
+  .vendor-name { font-size: 13px; color: #e3e9f5; font-weight: 500; }
+  .vendor-cat { font-size: 10px; color: #6b7894; margin-top: 2px; font-family: "SF Mono", monospace; }
+  .vendor-amt { font-family: "SF Mono", monospace; font-size: 13px; color: #4dd0e1; font-weight: 600; }
+  .vendor-pct { font-family: "SF Mono", monospace; font-size: 11px; color: #8a96b0; min-width: 50px; text-align: right; }
+  .badge { font-family: "SF Mono", monospace; font-size: 9px; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.5px; margin-left: 8px; }
+  .badge-high { background: rgba(248,113,113,0.15); color: #f87171; }
+  .badge-med { background: rgba(212,168,44,0.15); color: #d4a82c; }
+  .badge-low { background: rgba(107,120,148,0.15); color: #6b7894; }
+  .anomalies { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .anomaly { background: #0d1322; border-left: 3px solid #fb923c; border-radius: 6px; padding: 14px 16px; }
+  .anomaly.critical { border-left-color: #f87171; }
+  .anomaly.info { border-left-color: #5b8def; }
+  .anomaly-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .anomaly-title { font-size: 13px; color: #ffffff; font-weight: 600; }
+  .anomaly-tag { font-family: "SF Mono", monospace; font-size: 9px; color: #fb923c; letter-spacing: 1px; }
+  .anomaly.critical .anomaly-tag { color: #f87171; }
+  .anomaly.info .anomaly-tag { color: #5b8def; }
+  .anomaly-body { font-size: 12px; color: #8a96b0; line-height: 1.5; }
+  .anomaly-q { font-size: 11px; color: #d4a82c; margin-top: 8px; font-style: italic; }
+  .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #1c2538; }
+  .footer-title { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .footer-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; color: #8a96b0; }
+  .footer-list span::before { content: "\2022 "; color: #6b7894; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(5,8,16,0.85); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #131929; border: 1px solid #d4a82c; border-radius: 12px; padding: 24px; width: 100%; max-width: 760px; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-family: "SF Mono", monospace; color: #d4a82c; font-size: 14px; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .modal p { color: #8a96b0; font-size: 12px; line-height: 1.6; margin-bottom: 12px; }
+  .modal code { font-family: "SF Mono", monospace; background: #0a0e1a; color: #c9d4e8; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+  .modal-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+  .modal-tab { padding: 6px 12px; background: #0a0e1a; border: 1px solid #2a3651; border-radius: 4px; color: #8a96b0; font-family: "SF Mono", monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; }
+  .modal-tab.active { background: #d4a82c; color: #0a0e1a; border-color: #d4a82c; }
+  .modal textarea { width: 100%; height: 240px; background: #0a0e1a; border: 1px solid #2a3651; border-radius: 6px; color: #e3e9f5; font-family: "SF Mono", monospace; font-size: 11px; padding: 12px; resize: vertical; }
+  .modal textarea:focus { outline: none; border-color: #d4a82c; }
+  .modal-detect { font-family: "SF Mono", monospace; font-size: 11px; padding: 8px 12px; border-radius: 4px; margin-top: 8px; min-height: 30px; }
+  .modal-detect.ok { background: rgba(77,222,128,0.1); border: 1px solid rgba(77,222,128,0.3); color: #4ade80; }
+  .modal-detect.err { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+  .modal-detect.idle { background: #0a0e1a; border: 1px solid #2a3651; color: #6b7894; }
+  .modal-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .back-hub { display: block; text-align: center; margin-top: 32px; padding: 12px; font-size: 12px; color: #6b7894; text-decoration: none; border-top: 1px solid #1c2538; }
+  .back-hub:hover { color: #d4a82c; }
+  @media (max-width: 1100px) {
+    .tiles { grid-template-columns: repeat(3, 1fr); }
+    .row-2 { grid-template-columns: 1fr; }
+    .anomalies { grid-template-columns: 1fr; }
+    .footer-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="brand">DNT HOME BUYERS &middot; MARKETING COMMAND CENTER</div>
+    <div class="h1">Marketing Expense Tracker</div>
+    <div class="subtitle" id="subtitle">QuickBooks YTD &middot; Spend &middot; Channel Mix &middot; Vendor Concentration &middot; Anomalies</div>
+  </div>
+  <div class="header-right">
+    <div class="header-stats">
+      <div class="label">YTD SPEND &middot; <span id="periodLabel">120 DAYS</span></div>
+      <div class="big"><span id="hdrTotal">$86.3K</span> <span class="label-inline">total</span> <span class="gold" id="hdrRunRate">$262.6K</span> <span class="label-inline">run-rate</span></div>
+      <div class="small" id="hdrPeriod">Jan 1 &ndash; Apr 30, 2026 &middot; 201 transactions</div>
+    </div>
+    <div class="header-buttons">
+      <button class="btn btn-primary" onclick="openRefreshModal()">&#8635; REFRESH DATA</button>
+      <button class="btn btn-ghost btn-danger" onclick="resetData()">RESET</button>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <div class="label">VIEW</div>
+    <div class="tabs" id="view-tabs">
+      <div class="tab active" data-tab="overview">Overview</div>
+      <div class="tab" data-tab="channels">Channels</div>
+      <div class="tab" data-tab="vendors">Vendors</div>
+      <div class="tab" data-tab="anomalies">Anomalies</div>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="label">PERIOD</div>
+    <div class="tabs">
+      <div class="tab blue active">Monthly</div>
+      <div class="tab" style="opacity:0.5;cursor:not-allowed">Weekly</div>
+      <div class="tab" style="opacity:0.5;cursor:not-allowed">Quarterly</div>
+    </div>
+  </div>
+</div>
+
+<div class="data-status baked" id="dataStatus">
+  <span><strong>SOURCE:</strong> Baked-in YTD snapshot &middot; Jan 1 &ndash; Apr 30, 2026 &middot; 201 transactions</span>
+  <span>&#8635; Refresh to load live data</span>
+</div>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="tab-content active" id="tab-overview">
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">SPEND OVER TIME &middot; MONTHLY</div>
+      <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">YTD MIX BY PARENT</div>
+      <div id="mixBars"></div>
+    </div>
+  </div>
+  <div class="row row-1">
+    <div class="card">
+      <div class="card-title">CHANNEL MIX OVER TIME &middot; STACKED MONTHLY</div>
+      <div class="chart-wrap-tall"><canvas id="stackChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-channels">
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">MARKETING CHANNEL TREND</div>
+      <div class="chart-wrap-tall"><canvas id="channelTrendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">CHANNEL MIX &middot; YTD</div>
+      <div class="chart-wrap"><canvas id="channelDoughnut"></canvas></div>
+    </div>
+  </div>
+  <div class="row row-1">
+    <div class="card">
+      <div class="card-title">CHANNEL DETAIL &middot; MONTHLY</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; min-width:700px; border-collapse: collapse; font-size: 12px;">
+          <thead><tr id="channelTableHead" style="border-bottom: 1px solid #2a3651;"></tr></thead>
+          <tbody id="channelTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-vendors">
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-title">TOP 15 VENDORS &middot; YTD SPEND</div>
+      <div class="vendor-list" id="vendorList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">CONCENTRATION RISK</div>
+      <div id="concentration"></div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-anomalies">
+  <div class="row row-1">
+    <div class="card">
+      <div class="card-title">SIGNALS WORTH DIGGING INTO</div>
+      <div class="anomalies" id="anomalyList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-title">DATA SOURCES</div>
+  <div class="footer-list">
+    <span>QuickBooks Online &mdash; Transaction Detail / Transaction List</span>
+    <span>Paste raw QBO CSV directly &mdash; auto-maps accounts</span>
+    <span>Or paste the preprocessed DNT_YTD_Transactions_2026.csv</span>
+    <span>Sift attribution &mdash; _marketing_pipeline/output/sift_attribution.csv</span>
+    <span>Workbook &mdash; DNT_Marketing_Tracker_2026.xlsx</span>
+    <span>Persistence &mdash; localStorage + baked-in defaults</span>
+  </div>
+</div>
+
+<a class="back-hub" href="index.html">&larr; Back to Dashboards Hub</a>
+
+<div class="modal-overlay" id="refreshModal" onclick="if(event.target===this)closeRefreshModal()">
+  <div class="modal">
+    <h3>&#8635; REFRESH MARKETING DATA</h3>
+    <p>Paste a CSV below &mdash; the dashboard auto-detects which type and recomputes everything.</p>
+    <div class="modal-tabs">
+      <div class="modal-tab active" id="mt-help" onclick="showModalTab('help')">WHAT TO PASTE</div>
+      <div class="modal-tab" id="mt-paste" onclick="showModalTab('paste')">PASTE CSV</div>
+    </div>
+    <div id="modal-help">
+      <p><strong style="color:#4ade80;">Option A &mdash; Raw QuickBooks CSV (easiest)</strong></p>
+      <p>In QBO, run <em>Reports &rarr; Transaction List by Date</em> (or <em>Transaction Detail by Account</em>), filter to your 11 marketing/labor/overhead accounts for the period, hit Export &rarr; CSV. Paste the whole thing. Dashboard detects QBO columns (<code>Date</code>, <code>Account</code>, <code>Name</code>, <code>Amount</code>) and auto-maps each account to its Parent + Category. Accounts it can&rsquo;t map are skipped with a warning.</p>
+      <p><strong style="color:#c9d4e8;">Option B &mdash; Preprocessed Transactions CSV</strong></p>
+      <p>Header must include: <code>Date</code>, <code>Parent</code>, <code>Category</code>, <code>Vendor</code>, <code>Amount</code>. The output of <code>parse_pdfs.py</code> &mdash; use this if you already ran the Python pipeline.</p>
+      <p><strong style="color:#c9d4e8;">Option C &mdash; Sift Attribution CSV</strong> (adds CPL/ROI)</p>
+      <p>Header must include: <code>Month</code>, <code>Channel</code>, <code>Spend</code>, <code>Leads</code>, <code>CPL</code>, <code>Contracts</code>, <code>Revenue</code>, <code>ROI</code>. Output of <code>sift_attribution.py</code>. Layered on top of A or B.</p>
+    </div>
+    <div id="modal-paste" style="display:none;">
+      <textarea id="pasteArea" placeholder="Paste CSV here (header row included)..." oninput="detectCsv()"></textarea>
+      <div class="modal-detect idle" id="detectMsg">Awaiting input...</div>
+    </div>
+    <div class="modal-row">
+      <button class="btn btn-ghost" onclick="closeRefreshModal()">CANCEL</button>
+      <button class="btn btn-primary" id="applyBtn" onclick="applyPaste()" disabled style="opacity:0.4">APPLY</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_MONTHLY = {
+  labels: ["Jan", "Feb", "Mar", "Apr"],
+  marketing: [15206.13, 14651.76, 17468.76, 13842.33],
+  labor:     [5384.12, 3634.21, 3614.99, 4921.28],
+  overhead:  [1774.17, 2101.48, 1692.38, 2000.38],
+  total:     [22364.42, 20387.45, 22776.13, 20763.99]
+};
+const DEFAULT_CHANNELS = {
+  labels: ["Jan", "Feb", "Mar", "Apr"],
+  series: [
+    { name: "Bulk Calling",  data: [6435.99, 3197.56, 6396.39, 3514.49], color: "#4dd0e1", ytd: 19544.43 },
+    { name: "List",          data: [3620.00, 4980.00, 4560.00, 1480.00], color: "#5b8def", ytd: 14640.00 },
+    { name: "Direct Mail",   data: [2000.00, 3000.00, 2000.00, 4820.00], color: "#c084fc", ytd: 11820.00 },
+    { name: "Niche Calling", data: [2698.20,  834.00, 2602.49, 2127.84], color: "#4ade80", ytd: 8262.53 },
+    { name: "SEO",           data: [   0.00, 1500.00, 1500.00, 1800.00], color: "#fb923c", ytd: 4800.00 },
+    { name: "Skip Tracing",  data: [ 228.94,  336.20,  409.88,  100.00], color: "#d4a82c", ytd: 1075.02 }
+  ]
+};
+const DEFAULT_VENDORS = [
+  { name: "Dataflik",         category: "List + Direct Mail + Skip", amt: 12404.00, pct: 14.4 },
+  { name: "Hernandez",        category: "List",                       amt:  6300.00, pct:  7.3 },
+  { name: "DataSift",         category: "Direct Mail + Dues",         amt:  5070.00, pct:  5.9 },
+  { name: "Ready Mode",       category: "Bulk Calling (dialer)",      amt:  4952.45, pct:  5.7 },
+  { name: "Reggie Lacamen",   category: "Systems Manager",            amt:  4596.95, pct:  5.3 },
+  { name: "Ana Tirones",      category: "Lead Managers",              amt:  4467.89, pct:  5.2 },
+  { name: "Cleton",           category: "Niche Calling VA",           amt:  4172.26, pct:  4.8 },
+  { name: "Liezl Rizano",     category: "Bulk Calling VA",            amt:  3951.55, pct:  4.6 },
+  { name: "Sefora Jane",      category: "Virtual Acquisitions",       amt:  3943.37, pct:  4.6 },
+  { name: "Rachelle",         category: "Niche + Bulk Calling VA",    amt:  3932.77, pct:  4.6 },
+  { name: "Liezl Regis",      category: "Niche + Bulk Calling VA",    amt:  3876.49, pct:  4.5 },
+  { name: "Victor Verroya",   category: "Bulk Calling VA",            amt:  3816.38, pct:  4.4 },
+  { name: "Beatriz Medrana",  category: "Lead Managers",              amt:  3156.80, pct:  3.7 },
+  { name: "Mary Pauline",     category: "Bulk Calling VA",            amt:  3020.06, pct:  3.5 },
+  { name: "The Doctors Portal", category: "SEO",                      amt:  3000.00, pct:  3.5 }
+];
+const DEFAULT_TOTALS = {
+  total: 86291.99, marketing: 61168.98, labor: 17554.60, overhead: 7568.41,
+  daysCovered: 120, txCount: 201, vendorCount: 32,
+  periodStart: "Jan 1, 2026", periodEnd: "Apr 30, 2026"
+};
+const DEFAULT_ANOMALIES = [
+  { sev: "critical", tag: "LABOR DROP", title: "Acquisitions VA spend down 78% Jan→Apr", body: "$3,972 (Jan) → $2,658 → $1,795 → $885 (Apr full). Sefora only VA remaining.", q: "Intentional team trim, or capacity gap that’s costing deals?" },
+  { sev: "critical", tag: "CHANNEL DIP", title: "Bulk Calling dropped 45% Mar→Apr", body: "$6,436 → $3,198 → $6,396 → $3,514. Mary Pauline still inactive (last paid 3/27).", q: "One caller down = $1.3K/mo savings but fewer connects. Net positive?" },
+  { sev: "warning", tag: "FEB ANOMALY", title: "Niche Calling went dark in Feb (−69%)", body: "Dropped from $2,698 to $834 then recovered to $2,602 (Mar) and $2,128 (Apr).", q: "What broke in Feb? Pattern seems resolved." },
+  { sev: "warning", tag: "SKIP DIP", title: "Skip Tracing dropped 76% in April ($100)", body: "Three months of $229–$410 then $100 (two small pulls + credit).", q: "Switched to Sift built-in skip tracing? Or process gap?" },
+  { sev: "info", tag: "VENDOR SWITCH", title: "Direct Mail fully on DataSift — $4,820 in April", body: "Three DataSift invoices in April. $0 Dataflik. Consolidation complete.", q: "DataSift now handles mail + CRM. Good if pricing holds." },
+  { sev: "info", tag: "PRICE BUMP", title: "SEO retainer +20% — In Organical $1,800/mo", body: "Doctors Portal $1,500/mo → In Organical $1,800. +$3,600/yr annualized.", q: "Track rankings pre/post switch to validate the spend increase." },
+  { sev: "warning", tag: "CONCENTRATION", title: "Dataflik still 14.4% of all spend across 3 categories", body: "Single vendor in List + Direct Mail + Skip Tracing. Down from 15.8% but still concentrated.", q: "OK if deliberate. Risk if they raise prices or have an outage." },
+  { sev: "info", tag: "RAMP UP", title: "Lead Managers fully ramped — $2,760/mo in April", body: "$0 (Jan–Feb) → $887 (Mar) → $2,760 (Apr). Ana Tirones + Beatriz Medrana both biweekly.", q: "Bake $2.8K/mo into May+ budget. Track lead conversion lift." }
+];
+const CHANNEL_COLORS = { "Bulk Calling": "#4dd0e1", "List": "#5b8def", "Direct Mail": "#c084fc", "Niche Calling": "#4ade80", "SEO": "#fb923c", "Skip Tracing": "#d4a82c" };
+const FALLBACK_COLORS = ["#4dd0e1","#5b8def","#c084fc","#4ade80","#fb923c","#d4a82c","#f87171","#e879f9"];
+const STORAGE_KEY = "dnt_marketing_data_v1";
+
+const QBO_ACCOUNT_MAP = [
+  ["bulk calling",        "Bulk Calling",         "Marketing"],
+  ["niche calling",       "Niche Calling",        "Marketing"],
+  ["direct mail",         "Direct Mail",          "Marketing"],
+  ["seo",                 "SEO",                  "Marketing"],
+  ["skip trac",           "Skip Tracing",         "Marketing"],
+  ["skiptrac",            "Skip Tracing",         "Marketing"],
+  ["list",                "List",                 "Marketing"],
+  ["virtual acquisition", "Virtual Acquisitions", "Labor"],
+  ["lead manager",        "Lead Managers",        "Labor"],
+  ["systems manager",     "Systems Manager",      "Labor"],
+  ["telephone",           "Telephone",            "Overhead"],
+  ["phone",               "Telephone",            "Overhead"],
+  ["dues",                "Dues & Subscriptions", "Overhead"],
+  ["subscription",        "Dues & Subscriptions", "Overhead"]
+];
+function mapQboAccount(accountName) {
+  const a = (accountName || "").toLowerCase();
+  for (const [key, cat, par] of QBO_ACCOUNT_MAP) {
+    if (a.includes(key)) return { category: cat, parent: par };
+  }
+  return null;
+}
+
+let state = {
+  source: "baked-in", updatedAt: null,
+  monthly: DEFAULT_MONTHLY, channels: DEFAULT_CHANNELS, vendors: DEFAULT_VENDORS,
+  totals: DEFAULT_TOTALS, anomalies: DEFAULT_ANOMALIES, attribution: null
+};
+let charts = {};
+
+const fmt$ = v => "$" + (v||0).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const fmt$k = v => "$" + ((v||0)/1000).toFixed(1) + "K";
+
+function parseCSV(text) {
+  const rows = []; let row = [], cell = "", inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"' && text[i+1] === '"') { cell += '"'; i++; }
+      else if (c === '"') inQ = false;
+      else cell += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { row.push(cell); cell = ""; }
+      else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ""; }
+      else if (c === '\r') {}
+      else cell += c;
+    }
+  }
+  if (cell.length || row.length) { row.push(cell); rows.push(row); }
+  if (!rows.length) return { headers: [], rows: [] };
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(8, rows.length); i++) {
+    if (rows[i].some(c => c.trim().toLowerCase() === "date")) { headerIdx = i; break; }
+  }
+  const headers = rows[headerIdx].map(h => h.trim());
+  const out = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    if (rows[i].every(c => c.trim() === "")) continue;
+    if (rows[i].length === 1 && rows[i][0] === "") continue;
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (rows[i][idx] || "").trim(); });
+    out.push(obj);
+  }
+  return { headers, rows: out };
+}
+
+function detectCsvType(headers) {
+  const H = headers.map(h => h.toLowerCase());
+  const hasAll = (...needed) => needed.every(n => H.includes(n));
+  if (hasAll("month","channel","spend") && (H.includes("leads") || H.includes("cpl"))) return "attribution";
+  if (hasAll("date","amount") && (H.includes("category") || H.includes("parent"))) return "transactions";
+  if (hasAll("date","amount") && (H.includes("account") || H.includes("account name") || H.includes("split"))) return "qbo";
+  return null;
+}
+
+function processQboRows(rows) {
+  const mapped = []; const skipped = {};
+  for (const r of rows) {
+    const dStr = r.Date || r.date; if (!dStr) continue;
+    const account = r.Account || r["Account Name"] || r.account || "";
+    const hit = mapQboAccount(account);
+    if (!hit) {
+      if (account) skipped[account] = (skipped[account] || 0) + 1;
+      continue;
+    }
+    const amt = parseFloat((r.Amount || r.amount || "0").replace(/[$,()]/g,"").replace(/^-$/,"0"));
+    if (isNaN(amt) || amt === 0) continue;
+    const vendor = (r.Name || r.name || r.Vendor || r["Payee"] || "Unknown").trim() || "Unknown";
+    mapped.push({
+      Date: dStr, Parent: hit.parent, Category: hit.category, Vendor: vendor, Amount: String(amt)
+    });
+  }
+  if (!mapped.length) {
+    const skList = Object.entries(skipped).slice(0,5).map(([a,n])=>`${a} (${n})`).join(", ");
+    throw new Error("No QBO rows matched known accounts. " + (skList ? "Saw: " + skList : ""));
+  }
+  return processTransactions(mapped);
+}
+
+function processTransactions(rows) {
+  const txns = [];
+  for (const r of rows) {
+    const dStr = r.Date || r.date; if (!dStr) continue;
+    const d = new Date(dStr); if (isNaN(d)) continue;
+    const amt = parseFloat((r.Amount || r.amount || "0").replace(/[$,()]/g,""));
+    if (isNaN(amt)) continue;
+    txns.push({
+      date: d, mKey: d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"),
+      mLabel: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()],
+      parent: (r.Parent || r.parent || "Uncategorized").trim(),
+      category: (r.Category || r.category || "Uncategorized").trim(),
+      vendor: (r.Vendor || r.vendor || "Unknown").trim(),
+      amount: amt
+    });
+  }
+  if (!txns.length) throw new Error("No valid transactions parsed.");
+  txns.sort((a,b) => a.date - b.date);
+  const startDate = txns[0].date, endDate = txns[txns.length-1].date;
+  const daysCovered = Math.max(1, Math.round((endDate - startDate) / 86400000) + 1);
+
+  const monthOrder = []; const monthLabels = {};
+  for (const t of txns) {
+    if (!(t.mKey in monthLabels)) { monthLabels[t.mKey] = t.mLabel; monthOrder.push(t.mKey); }
+  }
+  const lastKey = monthOrder[monthOrder.length-1];
+  const endDay = new Date(endDate.getFullYear(), endDate.getMonth()+1, 0).getDate();
+  if (endDate.getDate() < endDay) monthLabels[lastKey] = monthLabels[lastKey] + " (partial)";
+  const labels = monthOrder.map(k => monthLabels[k]);
+
+  const blank = () => Object.fromEntries(monthOrder.map(k => [k, 0]));
+  const byParent = { Marketing: blank(), Labor: blank(), Overhead: blank() };
+  const totals = { Marketing: 0, Labor: 0, Overhead: 0 };
+  for (const t of txns) {
+    const p = (byParent[t.parent] !== undefined) ? t.parent : "Overhead";
+    byParent[p][t.mKey] += t.amount;
+    totals[p] += t.amount;
+  }
+  const monthly = {
+    labels,
+    marketing: monthOrder.map(k => +byParent.Marketing[k].toFixed(2)),
+    labor:     monthOrder.map(k => +byParent.Labor[k].toFixed(2)),
+    overhead:  monthOrder.map(k => +byParent.Overhead[k].toFixed(2)),
+    total:     monthOrder.map(k => +(byParent.Marketing[k]+byParent.Labor[k]+byParent.Overhead[k]).toFixed(2))
+  };
+
+  const mktTxns = txns.filter(t => t.parent === "Marketing");
+  const catSet = [...new Set(mktTxns.map(t => t.category))];
+  const catTotals = Object.fromEntries(catSet.map(c => [c, 0]));
+  const catByMonth = Object.fromEntries(catSet.map(c => [c, blank()]));
+  for (const t of mktTxns) {
+    catTotals[t.category] += t.amount;
+    catByMonth[t.category][t.mKey] += t.amount;
+  }
+  const sortedCats = catSet.sort((a,b) => catTotals[b] - catTotals[a]);
+  let colorIdx = 0;
+  const series = sortedCats.map(c => ({
+    name: c,
+    data: monthOrder.map(k => +catByMonth[c][k].toFixed(2)),
+    color: CHANNEL_COLORS[c] || FALLBACK_COLORS[colorIdx++ % FALLBACK_COLORS.length],
+    ytd: +catTotals[c].toFixed(2)
+  }));
+
+  const vTotals = {}, vCats = {};
+  for (const t of txns) {
+    vTotals[t.vendor] = (vTotals[t.vendor] || 0) + t.amount;
+    if (!vCats[t.vendor]) vCats[t.vendor] = {};
+    vCats[t.vendor][t.category] = (vCats[t.vendor][t.category] || 0) + t.amount;
+  }
+  const totalAll = totals.Marketing + totals.Labor + totals.Overhead;
+  const vendors = Object.entries(vTotals).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([name, amt]) => {
+    const cats = Object.entries(vCats[name]).sort((a,b)=>b[1]-a[1]);
+    const catLabel = cats.length === 1 ? cats[0][0] : cats.slice(0,2).map(c=>c[0]).join(" + ") + (cats.length>2?" +":"");
+    return { name, category: catLabel, amt: +amt.toFixed(2), pct: +(amt/totalAll*100).toFixed(1) };
+  });
+
+  return {
+    monthly, channels: { labels, series }, vendors,
+    totals: {
+      total: +totalAll.toFixed(2),
+      marketing: +totals.Marketing.toFixed(2),
+      labor: +totals.Labor.toFixed(2),
+      overhead: +totals.Overhead.toFixed(2),
+      daysCovered, txCount: txns.length, vendorCount: Object.keys(vTotals).length,
+      periodStart: startDate.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }),
+      periodEnd: endDate.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
+    }
+  };
+}
+
+function processAttribution(rows) {
+  const byMC = {};
+  for (const r of rows) {
+    const m = (r.Month || "").trim(), c = (r.Channel || "").trim();
+    if (!m || !c) continue;
+    if (!byMC[m]) byMC[m] = {};
+    byMC[m][c] = {
+      spend:     parseFloat((r.Spend     ||"0").replace(/[$,]/g,"")) || 0,
+      leads:     parseInt(  (r.Leads     ||"0").replace(/,/g,""))    || 0,
+      contracts: parseInt(  (r.Contracts ||"0").replace(/,/g,""))    || 0,
+      revenue:   parseFloat((r.Revenue   ||"0").replace(/[$,]/g,"")) || 0
+    };
+  }
+  const totalsByCh = {};
+  for (const m of Object.keys(byMC)) {
+    for (const c of Object.keys(byMC[m])) {
+      if (!totalsByCh[c]) totalsByCh[c] = { spend:0, leads:0, contracts:0, revenue:0 };
+      totalsByCh[c].spend += byMC[m][c].spend;
+      totalsByCh[c].leads += byMC[m][c].leads;
+      totalsByCh[c].contracts += byMC[m][c].contracts;
+      totalsByCh[c].revenue += byMC[m][c].revenue;
+    }
+  }
+  return { byMonthChannel: byMC, totalsByChannel: totalsByCh };
+}
+
+function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy(); } catch(e) {} }); charts = {}; }
+function renderTiles() {
+  const t = state.totals;
+  const monthlyAvg = t.total / (t.daysCovered/30.4);
+  const runRate = t.total * 365 / t.daysCovered;
+  const dailyRate = t.total / t.daysCovered;
+  const topVendor = state.vendors[0];
+  document.getElementById("tiles").innerHTML = `
+    <div class="tile"><div class="label">TOTAL SPEND</div><div class="value v-cyan">${fmt$k(t.total)}</div><div class="sub">${fmt$(monthlyAvg)}/mo avg</div></div>
+    <div class="tile"><div class="label">MARKETING ONLY</div><div class="value v-blue">${fmt$k(t.marketing)}</div><div class="sub">${(t.marketing/t.total*100).toFixed(1)}% of total</div></div>
+    <div class="tile"><div class="label">LABOR (VA + STAFF)</div><div class="value v-green">${fmt$k(t.labor)}</div><div class="sub">${(t.labor/t.total*100).toFixed(1)}% of total</div></div>
+    <div class="tile"><div class="label">OVERHEAD</div><div class="value v-orange">${fmt$k(t.overhead)}</div><div class="sub">Phone + dues</div></div>
+    <div class="tile"><div class="label">RUN-RATE (ANNUALIZED)</div><div class="value v-gold">${fmt$k(runRate)}</div><div class="sub">${fmt$(dailyRate)}/day</div></div>
+    <div class="tile"><div class="label">VENDORS</div><div class="value v-purple">${t.vendorCount}</div><div class="sub">Top vendor: ${topVendor ? topVendor.pct + "%" : "—"}</div></div>`;
+  document.getElementById("hdrTotal").textContent = fmt$k(t.total);
+  document.getElementById("hdrRunRate").textContent = fmt$k(runRate);
+  document.getElementById("hdrPeriod").textContent = `${t.periodStart} – ${t.periodEnd} · ${t.txCount} transactions`;
+  document.getElementById("periodLabel").textContent = t.daysCovered + " DAYS";
+}
+function renderMixBars() {
+  const t = state.totals;
+  const items = [
+    { label: "MARKETING", value: t.marketing, pct: +(t.marketing/t.total*100).toFixed(1), color: "#5b8def" },
+    { label: "LABOR",     value: t.labor,     pct: +(t.labor/t.total*100).toFixed(1),     color: "#4ade80" },
+    { label: "OVERHEAD",  value: t.overhead,  pct: +(t.overhead/t.total*100).toFixed(1),  color: "#fb923c" }
+  ];
+  document.getElementById("mixBars").innerHTML = items.map(m => `
+    <div class="funnel-row">
+      <div class="funnel-label-row"><span class="funnel-label">${m.label}</span><span class="funnel-value">${fmt$(m.value)} · ${m.pct}%</span></div>
+      <div class="funnel-bar"><div class="funnel-fill" style="width:${m.pct}%; background:${m.color};"></div></div>
+    </div>`).join("");
+}
+function chartOpts(stackedY, stackedX) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "bottom", labels: { color: "#8a96b0", font: { family: "SF Mono", size: 11 }, usePointStyle: true, padding: 14 } },
+      tooltip: { backgroundColor: "#0a0e1a", borderColor: "#2a3651", borderWidth: 1, titleColor: "#fff", bodyColor: "#c9d4e8", padding: 12, callbacks: { label: c => c.dataset.label + ": " + fmt$(c.raw) } }
+    },
+    scales: {
+      x: { stacked: !!stackedX, ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 } }, grid: { color: "#1c2538" } },
+      y: { stacked: !!stackedY, ticks: { color: "#6b7894", font: { family: "SF Mono", size: 11 }, callback: v => fmt$k(v) }, grid: { color: "#1c2538" } }
+    }
+  };
+}
+function renderTrend() {
+  const m = state.monthly;
+  charts.trend = new Chart(document.getElementById("trendChart"), {
+    type: "bar",
+    data: { labels: m.labels, datasets: [
+      { type:"bar", label:"Marketing", data:m.marketing, backgroundColor:"#5b8def", stack:"s1", borderRadius:4 },
+      { type:"bar", label:"Labor",     data:m.labor,     backgroundColor:"#4ade80", stack:"s1", borderRadius:4 },
+      { type:"bar", label:"Overhead",  data:m.overhead,  backgroundColor:"#fb923c", stack:"s1", borderRadius:4 },
+      { type:"line", label:"Monthly Total", data:m.total, borderColor:"#4dd0e1", backgroundColor:"rgba(77,208,225,0.15)", fill:true, tension:0.4, pointRadius:5, pointBackgroundColor:"#4dd0e1" }
+    ]}, options: chartOpts(true)
+  });
+}
+function renderStack() {
+  const ch = state.channels;
+  charts.stack = new Chart(document.getElementById("stackChart"), {
+    type: "bar",
+    data: { labels: ch.labels, datasets: ch.series.map(s => ({ label:s.name, data:s.data, backgroundColor:s.color, stack:"ch", borderRadius:3 })) },
+    options: chartOpts(true, true)
+  });
+}
+function renderChannelTrend() {
+  const ch = state.channels;
+  charts.channelTrend = new Chart(document.getElementById("channelTrendChart"), {
+    type: "line",
+    data: { labels: ch.labels, datasets: ch.series.map(s => ({ label:s.name, data:s.data, borderColor:s.color, backgroundColor:s.color+"22", tension:0.35, pointRadius:4, pointBackgroundColor:s.color, borderWidth:2 })) },
+    options: chartOpts()
+  });
+}
+function renderDoughnut() {
+  const ch = state.channels;
+  const tot = ch.series.reduce((s,c)=>s+c.ytd,0);
+  charts.doughnut = new Chart(document.getElementById("channelDoughnut"), {
+    type: "doughnut",
+    data: { labels: ch.series.map(s=>s.name), datasets: [{ data: ch.series.map(s=>s.ytd), backgroundColor: ch.series.map(s=>s.color), borderColor:"#0a0e1a", borderWidth:3 }] },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend: { position:"right", labels:{ color:"#8a96b0", font:{family:"SF Mono", size:11}, usePointStyle:true, padding:12 } },
+        tooltip: { backgroundColor:"#0a0e1a", borderColor:"#2a3651", borderWidth:1, titleColor:"#fff", bodyColor:"#c9d4e8", padding:12,
+          callbacks: { label: c => c.label + ": " + fmt$(c.raw) + " (" + (c.raw/tot*100).toFixed(1) + "%)" } }
+      }, cutout:"60%"
+    }
+  });
+}
+function renderChannelTable() {
+  const ch = state.channels;
+  const totMkt = ch.series.reduce((s,c)=>s+c.ytd,0);
+  const attrCols = state.attribution ? `
+    <th style="text-align:right; padding: 10px 8px; color: #4ade80; font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 1px;">LEADS</th>
+    <th style="text-align:right; padding: 10px 8px; color: #4ade80; font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 1px;">CPL</th>
+    <th style="text-align:right; padding: 10px 8px; color: #4ade80; font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 1px;">ROI</th>` : "";
+  document.getElementById("channelTableHead").innerHTML = `
+    <th style="text-align:left; padding: 10px 8px; color: #6b7894; font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 1px;">CHANNEL</th>
+    ${ch.labels.map(l => `<th style="text-align:right; padding: 10px 8px; color: #6b7894; font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 1px;">${l.toUpperCase()}</th>`).join("")}
+    <th style="text-align:right; padding: 10px 8px; color: #6b7894; font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 1px;">YTD</th>
+    <th style="text-align:right; padding: 10px 8px; color: #6b7894; font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 1px;">% MIX</th>
+    ${attrCols}`;
+  document.getElementById("channelTable").innerHTML = ch.series.map(s => {
+    const pct = (s.ytd / totMkt * 100).toFixed(1);
+    let attr = "";
+    if (state.attribution) {
+      const t = state.attribution.totalsByChannel[s.name] || { leads:0, spend:s.ytd, revenue:0 };
+      const cpl = t.leads > 0 ? fmt$(s.ytd / t.leads) : "—";
+      const roi = (t.spend > 0 && t.revenue > 0) ? (((t.revenue - t.spend) / t.spend * 100).toFixed(0) + "%") : "—";
+      attr = `<td style="text-align:right; padding: 10px 8px; color: #c9d4e8; font-family: 'SF Mono', monospace;">${t.leads || "—"}</td>
+              <td style="text-align:right; padding: 10px 8px; color: #4ade80; font-family: 'SF Mono', monospace;">${cpl}</td>
+              <td style="text-align:right; padding: 10px 8px; color: #4ade80; font-family: 'SF Mono', monospace;">${roi}</td>`;
+    }
+    return `<tr style="border-bottom: 1px solid #1c2538;">
+      <td style="padding: 10px 8px; color: #e3e9f5; font-weight: 500;"><span style="display:inline-block; width:10px; height:10px; background:${s.color}; border-radius:2px; margin-right:8px;"></span>${s.name}</td>
+      ${s.data.map(v => `<td style="text-align:right; padding: 10px 8px; color: #c9d4e8; font-family: 'SF Mono', monospace;">${fmt$(v)}</td>`).join("")}
+      <td style="text-align:right; padding: 10px 8px; color: #4dd0e1; font-family: 'SF Mono', monospace; font-weight: 600;">${fmt$(s.ytd)}</td>
+      <td style="text-align:right; padding: 10px 8px; color: #d4a82c; font-family: 'SF Mono', monospace;">${pct}%</td>
+      ${attr}
+    </tr>`;
+  }).join("");
+}
+function riskClass(pct) { return pct > 10 ? "high" : pct > 5 ? "medium" : "low"; }
+function riskLabel(pct) { return pct > 10 ? "HIGH" : pct > 5 ? "MEDIUM" : "LOW"; }
+function riskBadge(pct) { return pct > 10 ? "badge-high" : pct > 5 ? "badge-med" : "badge-low"; }
+function renderVendors() {
+  document.getElementById("vendorList").innerHTML = state.vendors.map(v => `
+    <div class="vendor-row ${riskClass(v.pct)}">
+      <div><div class="vendor-name">${v.name}<span class="badge ${riskBadge(v.pct)}">${riskLabel(v.pct)}</span></div><div class="vendor-cat">${v.category}</div></div>
+      <div class="vendor-amt">${fmt$(v.amt)}</div>
+      <div class="vendor-pct">${v.pct}%</div>
+    </div>`).join("");
+  const t = state.totals;
+  const top1 = state.vendors[0];
+  const top5sum = state.vendors.slice(0,5).reduce((s,v)=>s+v.amt,0);
+  const top10sum = state.vendors.slice(0,10).reduce((s,v)=>s+v.amt,0);
+  document.getElementById("concentration").innerHTML = `
+    <div style="margin-bottom:16px;"><div style="font-size:11px; color:#6b7894; font-family:'SF Mono',monospace; letter-spacing:1px; margin-bottom:6px;">TOP 1 VENDOR</div><div style="font-size:28px; color:${top1.pct>10?'#f87171':'#d4a82c'}; font-weight:700; font-family:'SF Mono',monospace;">${top1.pct}%</div><div style="font-size:11px; color:#6b7894; margin-top:4px;">${top1.name} · ${fmt$(top1.amt)}</div></div>
+    <div style="margin-bottom:16px;"><div style="font-size:11px; color:#6b7894; font-family:'SF Mono',monospace; letter-spacing:1px; margin-bottom:6px;">TOP 5 VENDORS</div><div style="font-size:28px; color:#d4a82c; font-weight:700; font-family:'SF Mono',monospace;">${(top5sum/t.total*100).toFixed(1)}%</div><div style="font-size:11px; color:#6b7894; margin-top:4px;">${fmt$(top5sum)} of ${fmt$k(t.total)}</div></div>
+    <div style="margin-bottom:16px;"><div style="font-size:11px; color:#6b7894; font-family:'SF Mono',monospace; letter-spacing:1px; margin-bottom:6px;">TOP 10 VENDORS</div><div style="font-size:28px; color:#4dd0e1; font-weight:700; font-family:'SF Mono',monospace;">${(top10sum/t.total*100).toFixed(1)}%</div><div style="font-size:11px; color:#6b7894; margin-top:4px;">${fmt$(top10sum)} of ${fmt$k(t.total)}</div></div>`;
+}
+function renderAnomalies() {
+  document.getElementById("anomalyList").innerHTML = state.anomalies.map(a => `
+    <div class="anomaly ${a.sev}">
+      <div class="anomaly-head"><div class="anomaly-title">${a.title}</div><div class="anomaly-tag">${a.tag}</div></div>
+      <div class="anomaly-body">${a.body}</div>
+      <div class="anomaly-q">→ ${a.q}</div>
+    </div>`).join("");
+}
+function renderStatus() {
+  const el = document.getElementById("dataStatus");
+  if (state.source === "baked-in") {
+    el.className = "data-status baked";
+    el.innerHTML = `<span><strong>SOURCE:</strong> Baked-in YTD snapshot · ${state.totals.periodStart} – ${state.totals.periodEnd} · ${state.totals.txCount} transactions</span><span>↻ Refresh to load live data</span>`;
+  } else {
+    const when = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : "just now";
+    const attrTag = state.attribution ? " + Sift attribution" : "";
+    el.className = "data-status fresh";
+    el.innerHTML = `<span><strong>SOURCE:</strong> Pasted ${state.source}${attrTag} · ${state.totals.periodStart} – ${state.totals.periodEnd} · ${state.totals.txCount} transactions</span><span>Updated ${when}</span>`;
+  }
+}
+function renderAll() {
+  destroyCharts(); renderStatus(); renderTiles(); renderMixBars();
+  renderTrend(); renderStack(); renderChannelTrend(); renderDoughnut();
+  renderChannelTable(); renderVendors(); renderAnomalies();
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      source: state.source, updatedAt: state.updatedAt,
+      monthly: state.monthly, channels: state.channels, vendors: state.vendors,
+      totals: state.totals, anomalies: state.anomalies, attribution: state.attribution
+    }));
+  } catch(e) {}
+}
+function hydrate() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (saved && saved.source && saved.source !== "baked-in") {
+      state.source = saved.source;
+      state.updatedAt = saved.updatedAt;
+      state.monthly = saved.monthly || DEFAULT_MONTHLY;
+      state.channels = saved.channels || DEFAULT_CHANNELS;
+      state.vendors = saved.vendors || DEFAULT_VENDORS;
+      state.totals = saved.totals || DEFAULT_TOTALS;
+      state.anomalies = saved.anomalies || DEFAULT_ANOMALIES;
+      state.attribution = saved.attribution || null;
+    }
+  } catch(e) {}
+}
+
+function openRefreshModal() {
+  document.getElementById("refreshModal").classList.add("show");
+  document.getElementById("pasteArea").value = "";
+  showModalTab("help"); setDetect("idle", "Awaiting input…");
+}
+function closeRefreshModal() { document.getElementById("refreshModal").classList.remove("show"); }
+function showModalTab(name) {
+  document.getElementById("mt-help").classList.toggle("active", name==="help");
+  document.getElementById("mt-paste").classList.toggle("active", name==="paste");
+  document.getElementById("modal-help").style.display  = name==="help"  ? "block" : "none";
+  document.getElementById("modal-paste").style.display = name==="paste" ? "block" : "none";
+}
+function setDetect(kind, msg) {
+  const d = document.getElementById("detectMsg");
+  d.className = "modal-detect " + kind; d.textContent = msg;
+  const apply = document.getElementById("applyBtn");
+  apply.disabled = kind !== "ok"; apply.style.opacity = kind === "ok" ? "1" : "0.4";
+}
+let pendingParse = null;
+function detectCsv() {
+  const txt = document.getElementById("pasteArea").value.trim();
+  if (!txt) { setDetect("idle", "Awaiting input…"); pendingParse = null; return; }
+  try {
+    const parsed = parseCSV(txt);
+    const kind = detectCsvType(parsed.headers);
+    if (!kind) { setDetect("err", `Headers not recognized. Got: ${parsed.headers.slice(0,6).join(", ")}…`); pendingParse = null; return; }
+    pendingParse = { kind, parsed };
+    const label = kind === "qbo" ? "RAW QBO CSV" : kind === "transactions" ? "TRANSACTIONS CSV" : "SIFT ATTRIBUTION CSV";
+    setDetect("ok", `✓ Detected ${label} — ${parsed.rows.length} rows ready`);
+  } catch(e) { setDetect("err", "Parse error: " + e.message); pendingParse = null; }
+}
+function applyPaste() {
+  if (!pendingParse) return;
+  try {
+    if (pendingParse.kind === "qbo") {
+      const built = processQboRows(pendingParse.parsed.rows);
+      state.source = "raw QBO CSV";
+      state.monthly = built.monthly; state.channels = built.channels;
+      state.vendors = built.vendors; state.totals = built.totals;
+    } else if (pendingParse.kind === "transactions") {
+      const built = processTransactions(pendingParse.parsed.rows);
+      state.source = "transactions CSV";
+      state.monthly = built.monthly; state.channels = built.channels;
+      state.vendors = built.vendors; state.totals = built.totals;
+    } else if (pendingParse.kind === "attribution") {
+      state.attribution = processAttribution(pendingParse.parsed.rows);
+      state.source = (state.source === "baked-in" ? "Sift attribution only" : state.source + " + Sift attribution");
+    }
+    state.updatedAt = new Date().toISOString();
+    persist(); renderAll(); closeRefreshModal();
+  } catch(e) { setDetect("err", "Apply failed: " + e.message); }
+}
+function resetData() {
+  if (!confirm("Reset to baked-in YTD snapshot? Pasted data and attribution will be cleared.")) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  state.source = "baked-in"; state.updatedAt = null;
+  state.monthly = DEFAULT_MONTHLY; state.channels = DEFAULT_CHANNELS;
+  state.vendors = DEFAULT_VENDORS; state.totals = DEFAULT_TOTALS; state.attribution = null;
+  renderAll();
+}
+
+hydrate();
+renderAll();
+document.querySelectorAll("#view-tabs .tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll("#view-tabs .tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.getElementById("tab-" + t.dataset.tab).classList.add("active");
+  });
+});
+</script>
+</body>
+</html>

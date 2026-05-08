@@ -1,2508 +1,745 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DNT Properties Pipeline</title>
-<style>
-:root {
-  color-scheme: light;
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --surface-2: #f0f2f7;
-  --border: #e3e6ee;
-  --border-strong: #cdd2de;
-  --text: #1a1f2e;
-  --text-muted: #6a7183;
-  --text-faint: #98a0b3;
-  --primary: #0f1e3d;
-  --primary-2: #1e3a73;
-  --accent: #c9a24a;
-  --danger: #dc2626;
-  --success: #10b981;
-  --shadow-sm: 0 1px 2px rgba(15, 30, 61, 0.06);
-  --shadow-md: 0 4px 12px rgba(15, 30, 61, 0.08);
-  --shadow-lg: 0 12px 32px rgba(15, 30, 61, 0.12);
-  --radius: 10px;
-  --radius-sm: 6px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-  line-height: 1.45;
-  -webkit-font-smoothing: antialiased;
-}
-.app { max-width: 1600px; margin: 0 auto; padding: 14px 18px 40px; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Properties Pipeline - DNT Home Buyers</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #131929;
+      --bg-tertiary: #1c2538;
+      --text-primary: #c9d4e8;
+      --text-muted: #8b95b0;
+      --accent-gold: #d4a82c;
+      --accent-cyan: #4dd0e1;
+      --accent-blue: #5b8def;
+      --accent-green: #4ade80;
+      --accent-orange: #fb923c;
+      --accent-purple: #c084fc;
+      --border-color: #1c2538;
+    }
 
-.app-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 12px; }
-.logo {
-  width: 38px; height: 38px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
-  border-radius: 9px;
-  display: grid; place-items: center;
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  box-shadow: var(--shadow-md);
-}
-.brand-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
-.brand-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.search-input {
-  width: 220px; padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  font-size: 13px;
-  transition: border-color .15s, box-shadow .15s;
-}
-.search-input:focus { outline: none; border-color: var(--primary-2); box-shadow: 0 0 0 3px rgba(30,58,115,.12); }
-.btn {
-  padding: 7px 13px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--text);
-  border-radius: var(--radius-sm);
-  font-size: 12.5px; font-weight: 500;
-  cursor: pointer;
-  transition: background .12s, border-color .12s, transform .06s;
-}
-.btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
-.btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-.btn-primary:hover { background: var(--primary-2); border-color: var(--primary-2); }
-.btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
-.btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-.tab {
-  padding: 10px 16px;
-  border: none; background: transparent;
-  font-size: 13px; font-weight: 500;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color .12s, border-color .12s;
-}
-.tab:hover { color: var(--text); }
-.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
 
-.panel { display: none; }
-.panel.active { display: block; animation: fadeIn .18s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+    body {
+      padding: 2rem 1rem;
+    }
 
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px; }
-.kpi {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-}
-.kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary-2); }
-.kpi.alert::before { background: var(--danger); }
-.kpi.accent::before { background: var(--accent); }
-.kpi.success::before { background: var(--success); }
-.kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
-.kpi-value { font-size: 22px; font-weight: 700; margin-top: 6px; letter-spacing: -0.02em; }
-.kpi-sub { font-size: 11px; color: var(--text-faint); margin-top: 3px; }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
 
-.chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 16px; }
-@media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
-.chart-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-}
-.chart-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
-.chart-wrap { position: relative; height: 260px; }
+    /* Header */
+    .header {
+      margin-bottom: 3rem;
+      text-align: center;
+    }
 
-.stale-list {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-}
-.stale-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; gap: 10px; }
-.stale-item:last-child { border-bottom: none; }
-.stale-days { font-weight: 600; padding: 2px 8px; border-radius: 10px; font-size: 11px; white-space: nowrap; }
-.stale-days.hot { background: #fef2f2; color: #b91c1c; }
-.stale-days.warm { background: #fffbeb; color: #b45309; }
-.stale-days.cool { background: #f0f9ff; color: #0369a1; }
+    .brand {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      color: var(--accent-gold);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
 
-.lifetime-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
-.lifetime-row:last-child { border-bottom: none; }
-.lifetime-label { color: var(--text-muted); }
-.lifetime-val { font-weight: 600; color: var(--text); }
+    h1 {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
 
-.kanban-wrap { overflow-x: auto; padding-bottom: 8px; margin: 0 -4px; }
-.kanban { display: flex; gap: 10px; padding: 0 4px; min-height: 500px; }
-.kcol {
-  flex: 0 0 280px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 260px);
-  transition: background .12s, border-color .12s;
-}
-.kcol.drag-over { background: #eef4ff; border-color: var(--primary-2); border-style: dashed; }
-.kcol-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px 8px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
-.kcol-name { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text); }
-.kcol-dot { width: 8px; height: 8px; border-radius: 50%; }
-.kcol-count { font-size: 11px; color: var(--text-muted); font-weight: 500; padding: 1px 7px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
-.kcol-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 2px; }
-.kcard {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px;
-  cursor: grab;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow .12s, transform .06s, border-color .12s;
-  position: relative;
-}
-.kcard:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
-.kcard:active { cursor: grabbing; }
-.kcard.dragging { opacity: .4; }
-.kcard-stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
-.kcard-addr { font-size: 12.5px; font-weight: 600; color: var(--text); margin-left: 6px; line-height: 1.3; padding-right: 4px; }
-.kcard-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; margin-left: 6px; }
-.tag { font-size: 10.5px; font-weight: 500; padding: 1px 7px; border-radius: 10px; background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
-.tag.type { background: #f5f3ff; color: #6d28d9; border-color: #e9e3fc; }
-.tag.price { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
-.tag.date { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
-.tag.hot { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
-.tag.warm { background: #fffbeb; color: #b45309; border-color: #fde68a; }
-.tag.kiavi { background: #eff6ff; color: #1d4ed8; border-color: #c7dafe; }
-.tag.genesis { background: #fef3c7; color: #92400e; border-color: #fde68a; }
-.kcard-line { display: flex; justify-content: space-between; align-items: center; margin-left: 6px; margin-top: 5px; font-size: 11.5px; color: var(--text-muted); }
-.kcard-line.loan { color: var(--primary-2); font-weight: 500; }
-.kcard-line.draws { color: #047857; font-weight: 500; }
-.tag.draws { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .subtitle {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
 
-.list-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-.filter-pills { display: flex; gap: 5px; flex-wrap: wrap; }
-.pill {
-  padding: 4px 10px;
-  font-size: 11.5px; font-weight: 500;
-  border-radius: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all .12s;
-}
-.pill:hover { border-color: var(--border-strong); color: var(--text); }
-.pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-.pill.active:hover { background: var(--primary-2); }
-.list-count { font-size: 11.5px; color: var(--text-muted); }
+    /* KPI Tiles */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
 
-.list-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
-.list-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.list-table thead th {
-  position: sticky; top: 0; background: var(--surface-2);
-  text-align: left;
-  padding: 9px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .03em;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-}
-.list-table thead th:hover { background: #e6e9f1; color: var(--text); }
-.list-table thead th.sorted { color: var(--primary); }
-.list-table thead th .sort-arrow { margin-left: 4px; font-size: 9px; }
-.list-table tbody tr { cursor: pointer; transition: background .1s; }
-.list-table tbody tr:hover { background: #f9fafc; }
-.list-table tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.list-table tbody tr:last-child td { border-bottom: none; }
-.stage-pill { display: inline-block; padding: 2px 9px; font-size: 10.5px; font-weight: 600; border-radius: 10px; white-space: nowrap; }
-.days-cell { white-space: nowrap; }
-.days-cell.hot { color: #b91c1c; font-weight: 600; }
-.days-cell.warm { color: #b45309; font-weight: 600; }
-.days-cell-target { font-size: 10.5px; color: var(--text-faint); }
-.list-empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
 
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(15, 30, 61, 0.4);
-  display: grid; place-items: center;
-  z-index: 100;
-  padding: 20px;
-  animation: fadeIn .15s ease-out;
-  backdrop-filter: blur(2px);
-}
-.modal-overlay[hidden] { display: none !important; }
-.modal {
-  background: var(--surface);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 760px;
-  max-height: 92vh;
-  overflow: hidden;
-  display: flex; flex-direction: column;
-  box-shadow: var(--shadow-lg);
-  animation: modalIn .2s cubic-bezier(.16,.84,.44,1);
-}
-@keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.modal-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.modal-title { font-size: 15px; font-weight: 700; }
-.modal-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted); width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; }
-.modal-close:hover { background: var(--surface-2); color: var(--text); }
-.modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
-.modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; background: var(--surface-2); }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
-.form-group { display: flex; flex-direction: column; gap: 3px; }
-.form-group.full { grid-column: 1 / -1; }
-.form-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .03em; }
-.form-input, .form-select, .form-textarea {
-  padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  font-size: 13px;
-  color: var(--text);
-  font-family: inherit;
-  transition: border-color .15s, box-shadow .15s;
-}
-.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary-2); box-shadow: 0 0 0 3px rgba(30,58,115,.1); }
-.form-textarea { resize: vertical; min-height: 60px; }
-.form-section { grid-column: 1 / -1; font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .05em; margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
-.form-section:first-child { margin-top: 0; }
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
 
-.thresh-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.thresh-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); padding: 8px 6px; border-bottom: 1px solid var(--border); font-weight: 600; }
-.thresh-table td { padding: 10px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.thresh-table tr:last-child td { border-bottom: none; }
-.thresh-table input[type=number] { width: 90px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
-.thresh-table input[type=number]:focus { outline: none; border-color: var(--primary-2); box-shadow: 0 0 0 3px rgba(30,58,115,.1); }
-.thresh-info { font-size: 12px; color: var(--text-muted); line-height: 1.55; margin-bottom: 14px; padding: 10px 12px; background: var(--surface-2); border-radius: 8px; border-left: 3px solid var(--accent); }
-.thresh-completeness { font-size: 11.5px; margin-top: 8px; padding: 8px 10px; background: #fef2f2; border-radius: 6px; color: #991b1b; border-left: 3px solid var(--danger); }
-.thresh-completeness.ok { background: #ecfdf5; color: #047857; border-left-color: var(--success); }
+    .kpi-tile {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
 
-.toast {
-  position: fixed;
-  bottom: 20px; right: 20px;
-  background: var(--primary);
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
-  font-size: 12.5px;
-  font-weight: 500;
-  z-index: 200;
-  animation: toastIn .25s ease-out;
-}
-@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .kpi-tile:hover {
+      border-color: var(--accent-gold);
+      transform: translateY(-2px);
+    }
 
-.kanban-wrap::-webkit-scrollbar, .kcol-body::-webkit-scrollbar, .modal-body::-webkit-scrollbar { height: 8px; width: 8px; }
-.kanban-wrap::-webkit-scrollbar-thumb, .kcol-body::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
-.kanban-wrap::-webkit-scrollbar-track { background: transparent; }
+    .kpi-label {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
 
-/* === Financials tab === */
-.fin-status { padding: 12px 14px; border-radius: 8px; font-size: 12.5px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.fin-status.loading { background: #eff6ff; color: #1d4ed8; border-left: 3px solid var(--primary-2); }
-.fin-status.ok { background: #ecfdf5; color: #047857; border-left: 3px solid var(--success); }
-.fin-status.warn { background: #fffbeb; color: #92400e; border-left: 3px solid var(--accent); }
-.fin-status.error { background: #fef2f2; color: #991b1b; border-left: 3px solid var(--danger); }
-.fin-status .btn { margin-left: auto; padding: 4px 10px; font-size: 11.5px; }
+    .kpi-value {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--accent-gold);
+    }
 
-.fin-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 14px; }
-.fin-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
-.fin-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
-.fin-tile.kiavi::before { background: #1d4ed8; }
-.fin-tile.genesis::before { background: #92400e; }
-.fin-tile .ft-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
-.fin-tile .ft-value { font-size: 22px; font-weight: 700; margin-top: 6px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.fin-tile .ft-sub { font-size: 11px; color: var(--text-faint); margin-top: 3px; }
+    .kpi-subtext {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
 
-.fin-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 14px; }
-.fin-card-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
-.fin-card-title .badge { font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--surface-2); color: var(--text-muted); }
-.fin-card-sub { font-size: 11.5px; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
-.fin-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-@media (max-width: 900px) { .fin-grid-2 { grid-template-columns: 1fr; } }
+    /* Pipeline Stages */
+    .pipeline-section {
+      margin-bottom: 3rem;
+    }
 
-.lender-row { display: grid; grid-template-columns: 110px 1fr 220px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
-.lender-row:last-of-type { border-bottom: none; }
-.lender-label { font-weight: 600; color: var(--text); }
-.lender-label .muted { font-weight: 400; color: var(--text-faint); font-size: 11px; }
-.lender-bar { height: 10px; background: var(--surface-2); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
-.lender-fill { height: 100%; transition: width .3s; }
-.lender-fill.kiavi { background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%); }
-.lender-fill.genesis { background: linear-gradient(90deg, #f59e0b 0%, #92400e 100%); }
-.lender-amt { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-.lender-amt .muted { color: var(--text-faint); font-weight: 400; }
+    .section-title {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-gold);
+      margin-bottom: 1rem;
+    }
 
-.fin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.fin-table thead th { text-align: left; padding: 8px 8px; background: var(--surface-2); font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
-.fin-table thead th.num { text-align: right; }
-.fin-table tbody td { padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.fin-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
-.fin-table tbody td.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; color: var(--text-muted); }
-.fin-table tbody tr:last-child td { border-bottom: none; }
-.fin-table tbody tr:hover { background: #f9fafc; }
-.fin-table .muted { color: var(--text-faint); }
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: 1rem;
+    }
 
-.lender-pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 600; white-space: nowrap; background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
-.lender-pill.kiavi { background: #eff6ff; color: #1d4ed8; border-color: #c7dafe; }
-.lender-pill.genesis { background: #fef3c7; color: #92400e; border-color: #fde68a; }
-.fin-section-head { font-size: 14.5px; font-weight: 700; color: var(--primary); margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.fin-section-head:first-of-type { margin-top: 8px; }
-.fin-section-head .section-meta { font-size: 11px; color: var(--text-faint); font-weight: 500; }
-.fin-section-head .section-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
-.fin-section-head .section-status.loading { background: #eff6ff; color: #1d4ed8; }
-.fin-section-head .section-status.ok { background: #ecfdf5; color: #047857; }
-.fin-section-head .section-status.warn { background: #fffbeb; color: #92400e; }
-.fin-section-head .section-status.error { background: #fef2f2; color: #991b1b; }
-.draw-progress { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
-.draw-progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #047857); border-radius: 3px; }
-.contractor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-@media (max-width: 760px) { .contractor-grid { grid-template-columns: 1fr; } }
-.cont-list { display: flex; flex-direction: column; gap: 6px; }
-.cont-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: var(--surface-2); border-radius: 6px; font-size: 12px; }
-.cont-row .cont-name { font-weight: 600; color: var(--text); }
-.cont-row .cont-amt { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 500; }
-.cont-row .cont-sub { font-size: 10.5px; color: var(--text-faint); margin-left: 6px; }
+    .stage-column {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      min-width: 200px;
+    }
 
-.anomaly-list { display: flex; flex-direction: column; gap: 6px; }
-.anomaly { padding: 9px 12px; border-radius: 7px; font-size: 12px; border-left: 3px solid var(--text-muted); background: var(--surface-2); display: flex; gap: 12px; align-items: baseline; }
-.anomaly-high { background: #fef2f2; border-left-color: var(--danger); color: #7f1d1d; }
-.anomaly-mid { background: #fffbeb; border-left-color: var(--accent); color: #78350f; }
-.anomaly-low { background: #f0f9ff; border-left-color: var(--primary-2); color: #0c4a6e; }
-.anomaly-addr { font-weight: 600; flex: 0 0 auto; }
-.anomaly-issue { color: inherit; opacity: .8; flex: 1; }
+    .stage-header {
+      padding: 1rem;
+      border-top: 3px solid;
+      background-color: rgba(0, 0, 0, 0.3);
+    }
 
-.fin-table .yr-row td { font-weight: 600; }
-.fin-table .yr-row .pos { color: #047857; font-weight: 700; }
-</style>
+    .stage-title {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .stage-badge {
+      display: inline-block;
+      background-color: rgba(212, 168, 44, 0.2);
+      color: var(--accent-gold);
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-weight: 600;
+    }
+
+    .stage-cards {
+      padding: 0.75rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .property-card {
+      background-color: rgba(212, 168, 44, 0.08);
+      border: 1px solid rgba(212, 168, 44, 0.2);
+      border-radius: 4px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      line-height: 1.4;
+      cursor: default;
+    }
+
+    .property-card:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Charts Section */
+    .charts-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .chart-container {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .chart-title {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-gold);
+      margin-bottom: 1.5rem;
+    }
+
+    canvas {
+      max-height: 300px;
+    }
+
+    /* Tables */
+    .table-section {
+      margin-bottom: 3rem;
+    }
+
+    .table-title {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-gold);
+      margin-bottom: 1rem;
+    }
+
+    .table-container {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead {
+      background-color: rgba(0, 0, 0, 0.3);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tbody tr:hover {
+      background-color: rgba(212, 168, 44, 0.05);
+    }
+
+    .stage-badge-inline {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-weight: 600;
+      background-color: rgba(212, 168, 44, 0.2);
+      color: var(--accent-gold);
+    }
+
+    .num-cell {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      text-align: right;
+    }
+
+    /* Recent Closings */
+    .closings-list {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .closing-item {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .closing-item:last-child {
+      border-bottom: none;
+    }
+
+    .closing-date {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .back-hub {
+      display: inline-block;
+      color: var(--accent-gold);
+      text-decoration: none;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+    }
+
+    .back-hub:hover {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+
+    /* Scrollbar styling */
+    .stage-cards::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .stage-cards::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .stage-cards::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 3px;
+    }
+
+    .stage-cards::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-  <header class="app-header">
-    <div class="brand">
-      <div class="logo">DNT</div>
-      <div>
-        <div class="brand-title">Properties Pipeline</div>
-        <div class="brand-sub" id="brand-sub">Live portfolio view</div>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">DNT HOME BUYERS · PROPERTIES PIPELINE</div>
+      <h1>Properties Pipeline</h1>
+      <div class="subtitle" id="subtitle"><!-- Filled by JS --></div>
+    </div>
+
+    <!-- KPI Tiles -->
+    <div class="kpi-grid">
+      <div class="kpi-tile">
+        <div class="kpi-label">Active Properties</div>
+        <div class="kpi-value" id="kpi-active">0</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Capital Deployed</div>
+        <div class="kpi-value" id="kpi-capital">$0</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">In Rehab</div>
+        <div class="kpi-value" id="kpi-rehab">0</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Under Contract to Sell</div>
+        <div class="kpi-value" id="kpi-uc">0</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">YTD Sold</div>
+        <div class="kpi-value" id="kpi-ytd">0</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Avg Days Held</div>
+        <div class="kpi-value" id="kpi-days">0</div>
+        <div class="kpi-subtext">Owned properties</div>
       </div>
     </div>
-    <div class="controls">
-      <input type="search" id="global-search" class="search-input" placeholder="Search address, PM, notes...">
-      <button class="btn" id="thresholds-btn" title="Configure stale thresholds by deal type">Thresholds</button>
-      <button class="btn" id="import-btn" title="Import a CSV to replace current data">Import CSV</button>
-      <input type="file" id="import-file" accept=".csv" style="display:none">
-      <button class="btn" id="export-btn" title="Export current portfolio to CSV">Export CSV</button>
-      <button class="btn" id="reset-btn" title="Reset to original data">Reset</button>
-      <button class="btn btn-primary" id="add-btn">+ Add Property</button>
+
+    <!-- Pipeline Stages -->
+    <div class="pipeline-section">
+      <div class="section-title">Pipeline Stages</div>
+      <div class="pipeline-grid" id="pipeline-grid">
+        <!-- Filled by JS -->
+      </div>
     </div>
-  </header>
 
-  <nav class="tabs">
-    <button class="tab active" data-tab="dashboard">Dashboard</button>
-    <button class="tab" data-tab="kanban">Pipeline</button>
-    <button class="tab" data-tab="list">List</button>
-    <button class="tab" data-tab="financials">Financials</button>
-  </nav>
+    <!-- Charts -->
+    <div class="charts-section">
+      <div class="chart-container">
+        <div class="chart-title">Properties by Stage</div>
+        <canvas id="stageChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <div class="chart-title">Deal Type Distribution</div>
+        <canvas id="typeChart"></canvas>
+      </div>
+    </div>
 
-  <main>
-    <section class="panel active" data-panel="dashboard">
-      <div class="kpi-grid" id="kpi-grid"></div>
-      <div class="chart-grid">
-        <div class="chart-card">
-          <div class="chart-title">Capital deployed by stage</div>
-          <div class="chart-wrap"><canvas id="chart-stage"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">Active deal type mix</div>
-          <div class="chart-wrap"><canvas id="chart-type"></canvas></div>
-        </div>
-      </div>
-      <div class="chart-grid" style="grid-template-columns: 2fr 1fr;">
-        <div class="chart-card">
-          <div class="chart-title">Closed deals by year</div>
-          <div class="chart-wrap"><canvas id="chart-yearly"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">Lifetime footprint</div>
-          <div id="lifetime-stats"></div>
-        </div>
-      </div>
-      <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
-        <div class="chart-card">
-          <div class="chart-title">By city — capital at work (active)</div>
-          <div class="chart-wrap"><canvas id="chart-city"></canvas></div>
-        </div>
-        <div class="stale-list">
-          <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">
-            <span>Longest active holds</span>
-            <span style="font-size:10.5px;color:var(--text-faint);font-weight:500">days / type threshold</span>
-          </div>
-          <div id="stale-list-body"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" data-panel="kanban">
-      <div class="kanban-wrap">
-        <div class="kanban" id="kanban-board"></div>
-      </div>
-    </section>
-
-    <section class="panel" data-panel="list">
-      <div class="list-controls">
-        <div class="filter-pills" id="stage-pills"></div>
-        <div class="list-count" id="list-count"></div>
-      </div>
-      <div class="list-table-wrap">
-        <table class="list-table" id="list-table">
+    <!-- Active Properties Table -->
+    <div class="table-section">
+      <div class="table-title">Active Properties Detail</div>
+      <div class="table-container">
+        <table id="propertiesTable">
           <thead>
             <tr>
-              <th data-sort="address">Address <span class="sort-arrow"></span></th>
-              <th data-sort="stage">Stage <span class="sort-arrow"></span></th>
-              <th data-sort="type">Type <span class="sort-arrow"></span></th>
-              <th data-sort="purchasePrice">Purchase <span class="sort-arrow"></span></th>
-              <th data-sort="purchaseDate">Purchased <span class="sort-arrow"></span></th>
-              <th data-sort="daysHeld">Days held <span class="sort-arrow"></span></th>
-              <th data-sort="resalePrice">Resale / List <span class="sort-arrow"></span></th>
-              <th data-sort="closingDate">Close / Target <span class="sort-arrow"></span></th>
-              <th data-sort="realtor">Realtor <span class="sort-arrow"></span></th>
+              <th>Address</th>
+              <th>Stage</th>
+              <th>Type</th>
+              <th>Purchase Date</th>
+              <th class="num-cell">Purchase Price</th>
+              <th class="num-cell">Days Held</th>
             </tr>
           </thead>
-          <tbody id="list-body"></tbody>
+          <tbody id="propertiesBody">
+            <!-- Filled by JS -->
+          </tbody>
         </table>
       </div>
-    </section>
-
-    <section class="panel" data-panel="financials">
-      <div id="panel-financials"></div>
-    </section>
-  </main>
-</div>
-
-<div class="modal-overlay" id="modal" hidden>
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">Edit property</div>
-      <button class="modal-close" id="modal-close">&times;</button>
     </div>
-    <div class="modal-body">
-      <form id="edit-form" class="form-grid" onsubmit="return false;">
-        <div class="form-section">Core</div>
-        <div class="form-group full"><label class="form-label">Address</label><input class="form-input" name="address" required></div>
-        <div class="form-group"><label class="form-label">Stage</label><select class="form-select" name="stage" id="field-stage"></select></div>
-        <div class="form-group"><label class="form-label">Type of deal</label><select class="form-select" name="type"><option value="">—</option><option>Rehab</option><option>Add-A-Level</option><option>New Construction</option><option>Wholetail</option><option>Wholesale</option></select></div>
-        <div class="form-group"><label class="form-label">Purchase price</label><input class="form-input" name="purchasePrice" type="number" step="1000"></div>
-        <div class="form-group"><label class="form-label">Purchase date</label><input class="form-input" name="purchaseDate" type="date"></div>
 
-        <div class="form-section">Sale / Exit</div>
-        <div class="form-group"><label class="form-label">List date</label><input class="form-input" name="listDate" type="date"></div>
-        <div class="form-group"><label class="form-label">List price</label><input class="form-input" name="listPrice" type="number" step="1000"></div>
-        <div class="form-group"><label class="form-label">Current list price</label><input class="form-input" name="currentListPrice" type="number" step="1000"></div>
-        <div class="form-group"><label class="form-label">Resale price</label><input class="form-input" name="resalePrice" type="number" step="1000"></div>
-        <div class="form-group"><label class="form-label">Closing date</label><input class="form-input" name="closingDate" type="text" placeholder="YYYY-MM-DD or note"></div>
-        <div class="form-group"><label class="form-label">Financing</label><select class="form-select" name="mortgageType"><option value="">—</option><option>Cash</option><option>Conv</option><option>FHA</option><option>VA</option></select></div>
-        <div class="form-group"><label class="form-label">Mortgage commit date</label><input class="form-input" name="mortgageCommitDate" type="text" placeholder="YYYY-MM-DD"></div>
-        <div class="form-group"><label class="form-label">Deposit</label><input class="form-input" name="deposit" type="number" step="500"></div>
-        <div class="form-group"><label class="form-label">Realtor</label><input class="form-input" name="realtor"></div>
-
-        <div class="form-section">Financials (P&amp;L)</div>
-        <div class="form-group"><label class="form-label">Total loan amount</label><input class="form-input" name="totalLoan" type="number" step="1000"></div>
-        <div class="form-group"><label class="form-label">Net profit</label><input class="form-input" name="netProfit" type="number" step="100"></div>
-        <div class="form-group"><label class="form-label">Acquisition cost</label><input class="form-input" name="acquisitionCost" type="number" step="100" placeholder="closing costs on buy"></div>
-        <div class="form-group"><label class="form-label">Financing cost</label><input class="form-input" name="financingCost" type="number" step="100" placeholder="points, interest, draws"></div>
-        <div class="form-group"><label class="form-label">Insurance cost</label><input class="form-input" name="insuranceCost" type="number" step="100"></div>
-        <div class="form-group"><label class="form-label">Permits cost</label><input class="form-input" name="permitsCost" type="number" step="100"></div>
-        <div class="form-group"><label class="form-label">Utilities cost</label><input class="form-input" name="utilitiesCost" type="number" step="100"></div>
-        <div class="form-group"><label class="form-label">Selling cost</label><input class="form-input" name="sellingCost" type="number" step="100" placeholder="commission + closing on sell"></div>
-
-        <div class="form-section">Build / Team</div>
-        <div class="form-group"><label class="form-label">Rehab budget</label><input class="form-input" name="rehabBudget" type="number" step="1000"></div>
-        <div class="form-group"><label class="form-label">Actual budget</label><input class="form-input" name="actualBudget" type="number" step="1000"></div>
-        <div class="form-group"><label class="form-label">Project manager</label><input class="form-input" name="pm"></div>
-        <div class="form-group"><label class="form-label">Contractor</label><input class="form-input" name="contractor"></div>
-        <div class="form-group"><label class="form-label">Bed / Bath</label><input class="form-input" name="bedBath" placeholder="e.g. 4/2.5"></div>
-        <div class="form-group"><label class="form-label">Sq ft</label><input class="form-input" name="sqft"></div>
-        <div class="form-group"><label class="form-label">Lockbox code</label><input class="form-input" name="lockbox"></div>
-        <div class="form-group"><label class="form-label">Permit #</label><input class="form-input" name="permitNumber"></div>
-
-        <div class="form-section">Utilities</div>
-        <div class="form-group"><label class="form-label">Electric</label><input class="form-input" name="electric"></div>
-        <div class="form-group"><label class="form-label">Water</label><input class="form-input" name="water"></div>
-        <div class="form-group"><label class="form-label">Gas / Oil</label><input class="form-input" name="gas"></div>
-        <div class="form-group"><label class="form-label">Sewer / Septic</label><input class="form-input" name="sewer"></div>
-
-        <div class="form-section">Title / Legal</div>
-        <div class="form-group"><label class="form-label">Title / Attorney company</label><input class="form-input" name="titleCompany"></div>
-        <div class="form-group"><label class="form-label">Attorney review date</label><input class="form-input" name="attorneyReviewDate" type="text" placeholder="YYYY-MM-DD"></div>
-        <div class="form-group"><label class="form-label">UC date</label><input class="form-input" name="ucDate" type="text" placeholder="YYYY-MM-DD"></div>
-        <div class="form-group"><label class="form-label">Proposed closing</label><input class="form-input" name="proposedClosing" type="text" placeholder="YYYY-MM-DD"></div>
-
-        <div class="form-section">Notes</div>
-        <div class="form-group full"><label class="form-label">Notes</label><textarea class="form-textarea" name="notes" rows="3"></textarea></div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="delete-btn">Delete</button>
-      <div style="display:flex;gap:8px;">
-        <button class="btn" id="cancel-btn">Cancel</button>
-        <button class="btn btn-primary" id="save-btn">Save</button>
+    <!-- Recent Closings -->
+    <div class="table-section">
+      <div class="table-title">Recent Closings</div>
+      <div class="closings-list" id="closingsList">
+        <!-- Filled by JS -->
       </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a class="back-hub" href="index.html">← Back to Dashboards Hub</a>
     </div>
   </div>
-</div>
 
-<div class="modal-overlay" id="thresholds-modal" hidden>
-  <div class="modal" style="max-width:620px;">
-    <div class="modal-header">
-      <div class="modal-title">Stale thresholds by deal type</div>
-      <button class="modal-close" id="thresholds-close">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="thresh-info">
-        Days since purchase before a property is flagged stale. Past the threshold shows <strong style="color:#b45309;">amber</strong>; past 1.5× shows <strong style="color:#b91c1c;">red</strong>. Historical averages come from SOLD properties with purchase date, closing date, AND deal type recorded — as you enrich historical records, this calibrates automatically.
-      </div>
-      <div id="thresh-completeness-box"></div>
-      <table class="thresh-table">
-        <thead>
-          <tr><th>Deal type</th><th>Threshold (d)</th><th>Historical avg</th><th></th></tr>
-        </thead>
-        <tbody id="thresh-body"></tbody>
-      </table>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="thresh-reset-btn">Reset to defaults</button>
-      <div style="display:flex;gap:8px;">
-        <button class="btn" id="thresh-cancel">Cancel</button>
-        <button class="btn btn-primary" id="thresh-save">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <script>
+    // Data
+    const STAGES = [
+      { id: 'UC_BUY', label: 'UC to Buy', color: '#8b5cf6' },
+      { id: 'ATTORNEY', label: 'Attorney Review', color: '#3b82f6' },
+      { id: 'REHAB', label: 'Active Rehab', color: '#f59e0b' },
+      { id: 'LISTED', label: 'Active Listing', color: '#06b6d4' },
+      { id: 'UC_SELL', label: 'UC to Sell', color: '#14b8a6' },
+      { id: 'SOLD', label: 'Sold', color: '#10b981' },
+      { id: 'ON_HOLD', label: 'On Hold', color: '#64748b' },
+      { id: 'SHORT', label: 'Short Sale', color: '#6366f1' }
+    ];
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
-<script>
-(function(){
-'use strict';
+    const PROPERTIES = [
+      { id:'p1', stage:'UC_BUY', address:'18 High Point Way, Piscataway, NJ 08854', type:'Rehab', purchasePrice:520000, purchaseDate:'2026-02-05' },
+      { id:'p2', stage:'REHAB', address:'18 Campview Ave, Keansburg, NJ 07734', type:'Rehab', purchasePrice:130000, purchaseDate:'2024-11-18' },
+      { id:'p3', stage:'REHAB', address:'534 Morris Street, City of Orange, NJ 07050', type:'Rehab', purchasePrice:346500, purchaseDate:'2025-03-04' },
+      { id:'p4', stage:'REHAB', address:'117 Pearl St, Westfield, NJ 07090', type:'Add-A-Level', purchasePrice:735000, purchaseDate:'2025-03-18' },
+      { id:'p5', stage:'REHAB', address:'52 Huntley Rd, Summit, NJ 07901', type:'Add-A-Level', purchasePrice:624000, purchaseDate:'2025-05-07' },
+      { id:'p6', stage:'REHAB', address:'24 Sidney Place, Metuchen, NJ 08840', type:'New Construction', purchasePrice:585000, purchaseDate:'2025-06-05' },
+      { id:'p7', stage:'REHAB', address:'39 Griggs Drive, Dayton, NJ 08810', type:'Rehab', purchasePrice:380000, purchaseDate:'2025-11-03' },
+      { id:'p8', stage:'REHAB', address:'140 Cottage Pl, Westfield, NJ 07090', type:'New Construction', purchasePrice:715000, purchaseDate:'2025-11-03' },
+      { id:'p9', stage:'REHAB', address:'184 Old Bridge Tpke, South River, NJ 08882', type:'Rehab', purchasePrice:212000, purchaseDate:'2025-12-01' },
+      { id:'p10', stage:'REHAB', address:'39 John E Busch Avenue, Somerset, NJ 08873', type:'Rehab', purchasePrice:220000, purchaseDate:'2025-12-01' },
+      { id:'p11', stage:'REHAB', address:'1221 Charter St, Piscataway, NJ 08854', type:'Rehab', purchasePrice:325000, purchaseDate:'2026-01-09' },
+      { id:'p12', stage:'REHAB', address:'441 Compton Ave, Perth Amboy, NJ 08861', type:'Wholetail', purchasePrice:258700, purchaseDate:'2026-04-20' },
+      { id:'p13', stage:'UC_SELL', address:'127 Albert Street, North Arlington, NJ 07031', type:'Rehab', purchasePrice:446300, purchaseDate:'2025-09-15', resalePrice:775000 },
+      { id:'p14', stage:'UC_SELL', address:'39 Mechanic Street, Millburn, NJ 07041', type:'Add-A-Level', purchasePrice:775000, purchaseDate:'2025-01-15', resalePrice:1888800 },
+      { id:'p15', stage:'UC_SELL', address:'139 Lee Dr, Middlesex, NJ 08846', type:'Rehab', purchasePrice:400000, purchaseDate:'2025-07-14', resalePrice:589900 }
+    ];
 
-const STAGES = [
-  { id: 'UC_BUY',    label: 'UC to Buy',       color: '#8b5cf6', bg: '#f5f3ff', fg: '#6d28d9' },
-  { id: 'ATTORNEY',  label: 'Attorney Review', color: '#3b82f6', bg: '#eff6ff', fg: '#1d4ed8' },
-  { id: 'REHAB',     label: 'Active Rehab',    color: '#f59e0b', bg: '#fffbeb', fg: '#b45309' },
-  { id: 'LISTED',    label: 'Active Listing',  color: '#06b6d4', bg: '#ecfeff', fg: '#0e7490' },
-  { id: 'UC_SELL',   label: 'UC to Sell',      color: '#14b8a6', bg: '#f0fdfa', fg: '#0f766e' },
-  { id: 'SOLD',      label: 'Sold',            color: '#10b981', bg: '#ecfdf5', fg: '#047857' },
-  { id: 'ON_HOLD',   label: 'On Hold',         color: '#64748b', bg: '#f1f5f9', fg: '#475569' },
-  { id: 'SHORT',     label: 'Short Sale',      color: '#6366f1', bg: '#eef2ff', fg: '#4338ca' }
-];
-const stageMap = Object.fromEntries(STAGES.map(s => [s.id, s]));
-const OWNED_STAGES = new Set(['ATTORNEY', 'REHAB', 'LISTED', 'UC_SELL', 'ON_HOLD', 'SHORT']);
-const DEAL_TYPES = ['Wholetail', 'Rehab', 'Add-A-Level', 'New Construction', 'Wholesale'];
-const DEFAULT_THRESHOLDS = {
-  'Wholetail': 90, 'Rehab': 180, 'Add-A-Level': 270, 'New Construction': 365, 'Wholesale': 60, '__default': 180
-};
+    const SOLD = [
+      { address:'38 S 6th Ave, Highland Park, NJ 08904', closingDate:'2026-03-23' },
+      { address:'359 Ridgecrest Ave, Staten Island, NY 10312', closingDate:'2026-03-02' },
+      { address:'179 Fleet Ave, Edison, NJ 08820', closingDate:'2026-02-09' },
+      { address:'119 East Rd, Belford, Middletown Township, NJ 07718', closingDate:'2026-02-03' },
+      { address:'709 Front St, Dunellen, NJ 08812', closingDate:'2025-12-30' },
+      { address:'380 Prospect Street, South Amboy, NJ 08879', closingDate:'2025-12-23' },
+      { address:'23 South 4th Ave, Highland Park, NJ 08904', closingDate:'2025-12-18' },
+      { address:'17 Ferris Road, Edison, NJ 08817', closingDate:'2025-12-12' },
+      { address:'47 Buckingham Dr, Manchester, NJ 08759', closingDate:'2025-12-01' },
+      { address:'192 Mohawk Trail, Wayne, NJ 07470', closingDate:'2025-11-20' }
+    ];
 
-const INITIAL_DATA = [
-  { id:'p1', stage:'UC_BUY', address:'18 High Point Way, Piscataway, NJ 08854', type:'Rehab',
-    purchasePrice:520000, ucDate:'2026-02-05', attorneyReviewDate:'2026-02-11',
-    proposedClosing:'2026-02-25', titleCompany:'Executive Abstract Title Agency',
-    sewer:'Sewer', water:'American Water',
-    notes:'Deposit sent 2/11/2026. Title ordered 2/11/2026. OPRA ordered 2/12/2026, received 2/18/2026. No OPRA issues.' },
-  { id:'p2', stage:'REHAB', address:'18 Campview Ave, Keansburg, NJ 07734', type:'Rehab',
-    purchaseDate:'2024-11-18', purchasePrice:130000, lockbox:'0327',
-    electric:'JCPL (100161328677) DR: 358754227. Temp DR 360380002, Perm DR 360939250',
-    water:'Keansburg Water Dept', gas:'NJNG (220022887634)',
-    notes:'Electric scheduled for August 12. Matt is the planner 732-739-5022. Permit started 5/13/25.' },
-  { id:'p3', stage:'REHAB', address:'534 Morris Street, City of Orange, NJ 07050', type:'Rehab',
-    purchaseDate:'2025-03-04', purchasePrice:346500, lockbox:'0327',
-    electric:'PSEG (7783264905) FL 1', water:'Orange Township', gas:'PSEG (7783264905) FL 1' },
-  { id:'p4', stage:'REHAB', address:'117 Pearl St, Westfield, NJ 07090', type:'Add-A-Level',
-    purchaseDate:'2025-03-18', purchasePrice:735000, lockbox:'0327',
-    electric:'PSEG (7785210918) LDS-004462 DR 501148770. Perm DR 501166764',
-    water:'American Water (210056098463)',
-    gas:'Elizabeth TownGas (6030459712). Call Andrea 908-662-8433',
-    notes:'Dropped off variance on 10/3 for engineering.' },
-  { id:'p5', stage:'REHAB', address:'52 Huntley Rd, Summit, NJ 07901', type:'Add-A-Level',
-    purchaseDate:'2025-05-07', purchasePrice:624000, lockbox:'0327',
-    electric:'JCPL (100163717034) DR 360615333. Temp DR 360615279. House upgrade',
-    water:'American Water (210057022087)',
-    gas:'PSEG (7798606408) LDS-004459 JOB 80711541',
-    notes:'Spoke to building - they hired a new zoning person 2 days ago.' },
-  { id:'p6', stage:'REHAB', address:'24 Sidney Place, Metuchen, NJ 08840', type:'New Construction',
-    purchaseDate:'2025-06-05', purchasePrice:585000,
-    electric:'PSEG LDS-004476 501150070. Contact Darryl. DR 501150633 for demo',
-    water:'Middlesex Water (2986258863)', gas:'Elizabethtown Gas' },
-  { id:'p7', stage:'REHAB', address:'39 Griggs Drive, Dayton, NJ 08810', type:'Rehab',
-    purchaseDate:'2025-11-03', purchasePrice:380000, lockbox:'0327',
-    electric:'PSEG (7822455001)', water:'South Brunswick Water Dept', gas:'PSEG (7822455001)',
-    notes:'Elizabethtown Gas (101741985). 400069744627 meter request. 732-764-3110 meter clerk.' },
-  { id:'p8', stage:'REHAB', address:'140 Cottage Pl, Westfield, NJ 07090', type:'New Construction',
-    purchaseDate:'2025-11-03', purchasePrice:715000, lockbox:'0327',
-    electric:'PSEG (7822313002) Demo 501165552 temp 501187987 JOB 501165556',
-    water:'American Water (210058581480)', gas:'Elizabethtown Gas (0401101297)',
-    notes:'Erosion application submitted 11/21.' },
-  { id:'p9', stage:'REHAB', address:'184 Old Bridge Tpke, South River, NJ 08882', type:'Rehab',
-    purchaseDate:'2025-12-01', purchasePrice:212000, lockbox:'0327',
-    electric:'South River Board of Utilities', water:'South River Board of Utilities', gas:'PSEG (7826670705)' },
-  { id:'p10', stage:'REHAB', address:'39 John E Busch Avenue, Somerset, NJ 08873', type:'Rehab',
-    purchaseDate:'2025-12-01', purchasePrice:220000, lockbox:'0327',
-    electric:'PSEG (7827153909) JOB 501186694', water:'NA',
-    gas:'PSEG (7827153909) Gas relocation 0725843-LDS-028405 JOB 80725843' },
-  { id:'p11', stage:'REHAB', address:'1221 Charter St, Piscataway, NJ 08854', type:'Rehab',
-    purchaseDate:'2026-01-09', purchasePrice:325000, lockbox:'0327',
-    electric:'PSEG (7831310606)',
-    water:'American Water no service yet, install to curb - 908-482-4876',
-    gas:'PSEG (7831310606) No gas service yet (Job 80722918)',
-    notes:'Contact 8448868488' },
-  { id:'p12', stage:'REHAB', address:'441 Compton Ave, Perth Amboy, NJ 08861', type:'Wholetail',
-    purchaseDate:'2026-04-20', purchasePrice:258700, lockbox:'Alarm 1126',
-    electric:'PSEG (7846832506)', water:'Perth Amboy Water District',
-    gas:'Elizabethtown Gas (231906047)' },
-  { id:'p13', stage:'UC_SELL', address:'127 Albert Street, North Arlington, NJ 07031', type:'Rehab',
-    purchaseDate:'2025-09-15', purchasePrice:446300, listDate:'2026-03-25',
-    listPrice:749000, currentListPrice:749000, resalePrice:775000,
-    closingDate:'2026-05-08', mortgageType:'Conv', mortgageCommitDate:'2026-05-08',
-    deposit:15000, realtor:'Johnny Nunez',
-    electric:'PSEG (7820572701) (7823385902)', water:'PVWC (151566)',
-    gas:'PSEG (7820572701) (7823385902)' },
-  { id:'p14', stage:'UC_SELL', address:'39 Mechanic Street, Millburn, NJ 07041', type:'Add-A-Level',
-    purchaseDate:'2025-01-15', purchasePrice:775000, resalePrice:1888800,
-    closingDate:'10 days after CCO', mortgageType:'Conv',
-    deposit:188880, realtor:'Galo Alvez',
-    electric:'JCPL (100162008146) DR 360615327. House upgrade',
-    water:'American Water (210055565724)', gas:'PSEG (7776603406)' },
-  { id:'p15', stage:'UC_SELL', address:'139 Lee Dr, Middlesex, NJ 08846', type:'Rehab',
-    purchaseDate:'2025-07-14', purchasePrice:400000, listDate:'2026-01-15',
-    listPrice:599900, currentListPrice:589900, resalePrice:589900,
-    closingDate:'2026-05-18', mortgageType:'FHA', mortgageCommitDate:'2026-05-06',
-    deposit:1000, realtor:'Johnny Nunez',
-    electric:'PSEG (7817199809)', water:'American Water (210058266521)',
-    gas:'PSEG (7817199809)' },
-  { id:'p16', stage:'SOLD', address:'38 S 6th Ave, Highland Park, NJ 08904',
-    closingDate:'2026-03-23', notes:'Closed last 30 days.',
-    electric:'PSEG (7794463718)', water:'Highland Park Water Dept', gas:'PSEG (7794463718)' }
-];
+    // Utility Functions
+    const today = new Date('2026-05-07');
 
-// 86 historical sold records (2022-2026) merged on first load.
-const HISTORICAL_DATA = [
-  {id:'h22_01', stage:'SOLD', address:'9 Stonybrook Rd, Basking Ridge, NJ', closingDate:'2022-01-31'},
-  {id:'h22_02', stage:'SOLD', address:'521-23 Alletta St, Plainfield, NJ 07060', closingDate:'2022-02-22', electric:'PSEG(7597266405)', water:'American Water (1018-210044365269)', gas:'PSEG(7597266405)'},
-  {id:'h22_03', stage:'SOLD', address:'276 Woodruff Avenue, Avenel, NJ 07001', closingDate:'2022-03-01', electric:'PSEG (7571536618)', water:'Middlesex Water (4937628976)', gas:'Elizabeth Town Gas (4422199825)'},
-  {id:'h22_04', stage:'SOLD', address:'271 College Ave, Edison, NJ 08817', closingDate:'2022-04-04'},
-  {id:'h22_05', stage:'SOLD', address:'26 Alexandria DR, Manalapan, NJ 07726', closingDate:'2022-04-21', electric:'JCPL (100147112633)', water:'Gordons corner water (990009703)', gas:'NJNG (220020849415)'},
-  {id:'h22_06', stage:'SOLD', address:'204 Lincoln Ave, Ridgefield Park, NJ 07660', closingDate:'2022-06-30', electric:'PSEG (7577734403)', water:'SUEZ WATER (1223929189-204)', gas:'PSEG (7577734403)'},
-  {id:'h22_07', stage:'SOLD', address:'280 Orchard St, Rahway, NJ 07065', closingDate:'2022-07-14', electric:'PSEG(7571013305)', water:'SUEZ WATER (04204187666253)', gas:'Elizabeth Town Gas (2434526173)', notes:'Spoke with Gabby of ETG. Utility still on. Forward closing docs to etg-cvt@sjindustries.com.'},
-  {id:'h22_08', stage:'SOLD', address:'202 Madison Street, South Amboy, NJ 08879', closingDate:'2022-07-25', electric:'JCPL 100149346114 (2nd floor)', water:'Sayreville Water', gas:'PSEG (7616739105)'},
-  {id:'h22_09', stage:'SOLD', address:'544 Amsterdam Ave, Roselle Park, NJ 07204', closingDate:'2022-07-28', electric:'PSEG(7595487706)', water:'American Water 1018-210044276284', gas:'Elizabeth Town Gas (8263714673)'},
-  {id:'h22_10', stage:'SOLD', address:'59 Dahmer Road, Somerset, NJ 08873', closingDate:'2022-08-01', electric:'PSEG (7519373207)', water:'Franklin Township', gas:'PSEG (7519373207)'},
-  {id:'h22_11', stage:'SOLD', address:'663 Johnstone St, Perth Amboy, NJ 08861', closingDate:'2022-08-10', electric:'PSEG (7598143706)', water:'PAW (9373-0)', gas:'Elizabeth Town Gas (5516247977)'},
-  {id:'h22_12', stage:'SOLD', address:'1124-26 Loraine Ave, Plainfield, NJ 07060', closingDate:'2022-09-02', electric:'PSEG (7605568703)', water:'American Water (210044906905)', gas:'PSEG (7605568703)'},
-  {id:'h22_13', stage:'SOLD', address:'708 Bingham Street, Neptune, NJ 07753', closingDate:'2022-09-16', electric:'JCPL (100149703686)', water:'American Water (1018-210045770826)', gas:'NJNG (220021473106)'},
-  {id:'h22_14', stage:'SOLD', address:'643 Cornell Street, Perth Amboy, NJ 08861', closingDate:'2022-09-28', electric:'PSEG (7621333103)', water:'Perth Amboy Water Company', gas:'Elzabethtown Gas (1849033813)'},
-  {id:'h22_15', stage:'SOLD', address:'21 Glenville Road, Edison, NJ 08817', closingDate:'2022-11-17', type:'Wholesale', notes:'We sold the contract.'},
-  {id:'h22_16', stage:'SOLD', address:'8 Crestmont Ave, Edison, NJ 08820', closingDate:'2022-11-28', electric:'PSE+G (7642958102)', water:'Middlesex Water (7209836950)', gas:'Elizabeth Town Gas (8761962934)'},
-  {id:'h22_17', stage:'SOLD', address:'3 Glenville Road, Edison, NJ 08817', closingDate:'2022-11-30', water:'Edison Water (9022033-0)'},
-  {id:'h22_18', stage:'SOLD', address:'208 Walnut Street, Roselle Park, NJ 07204', closingDate:'2022-12-09', electric:'PSEG (7621333308)', water:'American Water (210045771669)', gas:'Elzabethtown Gas (2448237850)'},
-  {id:'h22_19', stage:'SOLD', address:'714 Raritan Ave, Perth Amboy, NJ 08861', closingDate:'2022-12-09', electric:'PSEG 7631371709', water:'Perth Amboy Water Company', gas:'Elizabeth Town Gas'},
-  {id:'h23_01', stage:'SOLD', address:'432 Washington St, Rahway, NJ 07065', closingDate:'2023-02-07', electric:'PSEG 7630055900', water:'Veolia (04209328639142)', gas:'Elzabethtown Gas (8584558107)'},
-  {id:'h23_02', stage:'SOLD', address:'119 Midland Blvd, Maplewood, NJ 07040', closingDate:'2023-02-08', electric:'PSEG (7636139707)', water:'American Water (210046905045)', gas:'PSEG (7636139707)'},
-  {id:'h23_03', stage:'SOLD', address:'82 Argyle Place, North Arlington, NJ 07031', closingDate:'2023-03-03', electric:'PSEG (7642099207)', water:'Passaic Water Commission (0322611-157816)', gas:'PSEG (7642099207)'},
-  {id:'h23_04', stage:'SOLD', address:'2714 Linwood RD, Union, NJ 07083', closingDate:'2023-03-13', electric:'PSEG(7651918606)', water:'American Water', gas:'Elizabeth Town Gas'},
-  {id:'h23_05', stage:'SOLD', address:'33 Parkside Ave, Piscataway, NJ 08854', closingDate:'2023-05-15', electric:'PSEG (5337058606)', water:'American Water', gas:'PSEG (5337057707)'},
-  {id:'h23_06', stage:'SOLD', address:'74 N Cottage Pl, Westfield, NJ 07090', closingDate:'2023-09-07', electric:'PSEG (7636924609)', water:'American Water (210046986907)', gas:'Elzabeth Town Gas (7512046183)'},
-  {id:'h23_07', stage:'SOLD', address:'727 Dewitt St, Linden, NJ 07036', closingDate:'2023-09-27', electric:'PSEG (7620946608)', water:'American Water (210045770772)', gas:'Elzabethtown Gas (1762117871)'},
-  {id:'h23_08', stage:'SOLD', address:'627 Desota Dr, Bridgewater, NJ 08807', closingDate:'2023-10-26', electric:'PSEG (7673537605)', water:'American Water (210049188115)', gas:'PSEG (7673537605)'},
-  {id:'h23_09', stage:'SOLD', address:'97 Mountain View Pl, Newark, NJ 07106', closingDate:'2023-11-10', electric:'PSEG (7672999702)', water:'City of Newark Water', gas:'PSEG (7672999702)'},
-  {id:'h23_10', stage:'SOLD', address:'20-22 Warren Street, North Plainfield, NJ 07060', closingDate:'2023-11-22', electric:'PSEG 1st 7646258008 / 2nd 7646407100', water:'American Water 210045526807', gas:'PSEG 1st 7646258008 / 2nd 7646407100'},
-  {id:'h23_11', stage:'SOLD', address:'7 Daniel Dr, Hillsborough, NJ 08844', closingDate:'2023-12-08', electric:'PSEG (7684412809)', water:'American Water (210049915447)', gas:'PSEG (7684412809)'},
-  {id:'h23_12', stage:'SOLD', address:'773 Gadek Place, Perth Amboy, NJ 08861', closingDate:'2023-12-11', electric:'PSEG (7656559507) and (7656904808)', water:'Perth Amboy Water District', gas:'Elizabethtown Gas (0877097107) and (6624645489)'},
-  {id:'h23_13', stage:'SOLD', address:'37-39 Longfellow Ave, Newark, NJ 07016', closingDate:'2023-12-14', electric:'PSEG (7699366808)', water:'City of Newark Water', gas:'PSEG (7699366808)'},
-  {id:'h23_14', stage:'SOLD', address:'24 Clark Dr, Howell, NJ 07731', closingDate:'2023-12-15', electric:'JCP+L (100154164931)', water:'Brick MUA 4261 (99998556-0)', gas:'NJNG'},
-  {id:'h23_15', stage:'SOLD', address:'919 Maple Ave, Piscataway, NJ 08854', closingDate:'2023-12-20', electric:'PSEG (7682523905)', water:'American Water (210049765437)', gas:'PSEG (7682523905) (job 80663503)'},
-  {id:'h24_01', stage:'SOLD', address:'641 Poole Ave, Union Beach, NJ 07735', closingDate:'2024-01-12', electric:'JCP+L (100154001984)', water:'American Water (210049189175)', gas:'NJNG (220021843103)'},
-  {id:'h24_02', stage:'SOLD', address:'5 Center Ave, Parlin, NJ 08859', closingDate:'2024-02-15', electric:'JCP+L (100155579392) DR 356078472', water:'Borough of Sayreville', gas:'PSEG (7692761809)'},
-  {id:'h24_03', stage:'SOLD', address:'555 Broughton Ave, Bloomfield, NJ 07003', closingDate:'2024-02-22', electric:'PSEG (7675214218)', water:'Township of Bloomfield', gas:'PSEG (7675214218)'},
-  {id:'h24_04', stage:'SOLD', address:'111 Whalen St, Manville, NJ 08835', closingDate:'2024-03-06', electric:'PSEG (7684964801)', water:'American Water (210050450872)', gas:'PSEG (7684964801)'},
-  {id:'h24_05', stage:'SOLD', address:'14 South St, Milltown, NJ 08850', closingDate:'2024-03-07', electric:'Borough of Milltown', water:'Borough of Milltown', gas:'PSEG (7692576807)'},
-  {id:'h24_06', stage:'SOLD', address:'23 Pittsburgh Ave, Piscataway, NJ 08854', closingDate:'2024-04-26', electric:'PSEG (7717497808)', water:'American Water (210051975886)', gas:'PSEG (7717497808)'},
-  {id:'h24_07', stage:'SOLD', address:'536-538 Muriel Pkwy, Elizabeth, NJ 07208', closingDate:'2024-05-24', electric:'PSEG (7713600809)', water:'Liberty Water (5500078877)', gas:'Elizabeth TownGas (4321860253)'},
-  {id:'h24_08', stage:'SOLD', address:'56 Daniel Dr, Franklin Park, NJ 08823', closingDate:'2024-06-07', electric:'PSEG (7725793518)', water:'Township of Franklin Park', gas:'PSEG (7725793518)'},
-  {id:'h24_09', stage:'SOLD', address:'114 Woodhaven Drive, Wayne, NJ 07470', closingDate:'2024-06-14', electric:'PSEG (7710116205)', water:'Wayne Township', gas:'PSEG (7710116205)'},
-  {id:'h24_10', stage:'SOLD', address:'222 Belmont Ave, North Plainfield, NJ 07060', closingDate:'2024-06-14', electric:'PSEG (7699033701)', water:'American Water (210050917559)', gas:'PSEG (7699033701)'},
-  {id:'h24_11', stage:'SOLD', address:'61 Mary Ave, Fords, NJ 08863', closingDate:'2024-06-20', electric:'PSEG (7679548005)', water:'Middlesex Water (1950453365)', gas:'Elizabeth Town Gas (6009286634)'},
-  {id:'h24_12', stage:'SOLD', address:'105 Grant Street, Linden, NJ 07036', closingDate:'2024-06-28', electric:'PSEG (7713600809)', water:'Liberty Water', gas:'Elizabeth TownGas (4321860253)'},
-  {id:'h24_13', stage:'SOLD', address:'115-117 Smith St, Newark, NJ 07106', closingDate:'2024-07-01', electric:'PSEG (7718727203) (7719009703) (7718331601)', water:'City of Newark Water', gas:'PSEG (7718727203) (7719009703) (7718331601)'},
-  {id:'h24_14', stage:'SOLD', address:'46 N Disbrow Hill Rd, Monroe, NJ 08831', closingDate:'2024-07-12', electric:'JCPL (100156821777)', water:'Well Water', gas:'PSEG (7712973008)'},
-  {id:'h24_15', stage:'SOLD', address:'108 Fleming St, Piscataway, NJ 08854', closingDate:'2024-07-12', electric:'PSEG (7720371402)', water:'American Water (210052091842)', gas:'PSEG (7720371402)'},
-  {id:'h24_16', stage:'SOLD', address:'10 Jake Brown Rd, Matawan, NJ 07747', closingDate:'2024-08-02', electric:'JCPL (100157816834)', water:'Old Bridge MUA', gas:'PSEG (7750726802)'},
-  {id:'h24_17', stage:'SOLD', address:'413 Fairview Ave, Middlesex, NJ 08846', closingDate:'2024-08-20', electric:'PSEG (7732599705)', water:'American Water (210052779753)', gas:'PSEG (7732599705)'},
-  {id:'h24_18', stage:'SOLD', address:'620 Oak Street, Ridgefield, NJ 07657', closingDate:'2024-09-27', electric:'PSEG (7728809318)', water:'Veolia (10005581173720)', gas:'PSEG (7728809318)'},
-  {id:'h24_19', stage:'SOLD', address:'82 Woodland Dr, Roselle, NJ 07203', closingDate:'2024-10-31', electric:'PSEG (7749105204)', water:'American Water', gas:'Elizabethtown Gas (1078118734)'},
-  {id:'h24_20', stage:'SOLD', address:'1019-1025 Coolidge Rd, Elizabeth, NJ 07208', closingDate:'2024-10-31', electric:'PSEG (7731224406)', water:'Liberty Water', gas:'ElizabethTown Gas (9993273317)'},
-  {id:'h24_21', stage:'SOLD', address:'335 Chestnut Pl, Piscataway, NJ 08854', closingDate:'2024-11-12', electric:'PSEG (7737246118)', water:'American Water (210053059421)', gas:'Call PSEG 800-832-0076 Job 80687805'},
-  {id:'h24_22', stage:'SOLD', address:'522 Linden Ave, Woodbridge, NJ 07095', closingDate:'2024-11-26', electric:'PSEG (7728709100)', water:'Middlesex Water (4390651802)', gas:'Elizabeth TownGas (2337751828)'},
-  {id:'h24_23', stage:'SOLD', address:'75 Royce Brook Rd, Hillsborough, NJ 08844', closingDate:'2024-12-16', electric:'PSEG (7751231807)', water:'American Water (210053928527)', gas:'PSEG (7751231807)'},
-  {id:'h24_24', stage:'SOLD', address:'108 Berry St, Hackensack, NJ 07601', closingDate:'2024-12-26', electric:'PSEG (7758796001)', water:'Veolia (10002399404214)', gas:'PSEG (7758796001)'},
-  {id:'h25_01', stage:'SOLD', address:'103 Lincoln Ave, Carteret, NJ 07008', closingDate:'2025-01-15', electric:'PSEG (7736619204)', water:'Middlesex Water (1853683467)', gas:'Elizabethtown Gas'},
-  {id:'h25_02', stage:'SOLD', address:'492 Chestnut Street, Kearney, NJ 07032', closingDate:'2025-01-17', electric:'PSEG (7735540108) (7735966504)', water:'Veolia (00302333825661)', gas:'PSEG (7735540108) (7735966504)'},
-  {id:'h25_03', stage:'SOLD', address:'1103 Clinton Avenue, South Plainfield, NJ 07080', closingDate:'2025-03-03', electric:'PSEG (7764082503)', water:'American Water (210054751560)', gas:'PSEG (7764082503)'},
-  {id:'h25_04', stage:'SOLD', address:'5 E Waverly Dr, East Brunswick, NJ 08816', closingDate:'2025-03-07', electric:'PSEG (7767407608)', water:'East Brunswick Water Dept', gas:'PSEG (7767407608)'},
-  {id:'h25_05', stage:'SOLD', address:'241 Clark Street, Hillside, NJ 07205', closingDate:'2025-04-02', electric:'PSEG (7764059005)', water:'American Water (210054701299)', gas:'Elizabeth Town Gas (7658114578)'},
-  {id:'h25_06', stage:'SOLD', address:'731 Ayres Ave, North Plainfield, NJ 07063', closingDate:'2025-04-18', electric:'PSEG (7768827406)', water:'American Water (210055083017)', gas:'PSEG (7768827406)'},
-  {id:'h25_07', stage:'SOLD', address:'55 Balsam Court, Hillsborough Township, NJ 08844', closingDate:'2025-04-18', electric:'PSEG (7777161105)', water:'American Water (210055603152)'},
-  {id:'h25_08', stage:'SOLD', address:'683 Kosciusko Street, Perth Amboy, NJ 08861', closingDate:'2025-04-25', electric:'PSEG (7778224208)', water:'Perth Amboy Water District', gas:'Elizabeth TownGas (0021804756)'},
-  {id:'h25_09', stage:'SOLD', address:'130 Ridge Rd, Colonia, NJ 07067', closingDate:'2025-05-09'},
-  {id:'h25_10', stage:'SOLD', address:'21 N Shore Blvd, Helmetta, NJ 08828', closingDate:'2025-05-21', electric:'JCPL (100160454839)', water:'Borough of Helmetta (Paul Reed 732-978-0364)', gas:'PSEG (Job 80693440) Chuck 732-325-8753'},
-  {id:'h25_11', stage:'SOLD', address:'81 Hancock Rd, Piscataway, NJ 08854', closingDate:'2025-07-11', electric:'PSEG (7785388601)', water:'American Water (210056177441)', gas:'PSEG (7785388601)', notes:'Utilities transferred after 7/17.'},
-  {id:'h25_12', stage:'SOLD', address:'414 Greenbrook Road, North Plainfield, NJ 07060', closingDate:'2025-08-08', electric:'PSEG (7790453718)', water:'American Water (210055917387)', gas:'PSEG (7790453718)'},
-  {id:'h25_13', stage:'SOLD', address:'5902 N Oaks Blvd, North Brunswick, NJ 08902', closingDate:'2025-08-08', electric:'PSEG (7788928704)', water:'Township of North Brunswick', gas:'PSEG (7788928704)'},
-  {id:'h25_14', stage:'SOLD', address:'4 Schmitt Street, Sayreville, NJ 08872', closingDate:'2025-08-11', electric:'JCPL (100162572679)', water:'Borough of Sayreville', gas:'PSEG (7783092403)'},
-  {id:'h25_15', stage:'SOLD', address:'17 Tamarack Rd, Somerset, NJ 08873', closingDate:'2025-08-22', electric:'PSEG (7781500318)', water:'Franklin Township', gas:'PSEG (7781500318)'},
-  {id:'h25_16', stage:'SOLD', address:'776 Elton Adelphia Rd, Freehold, NJ 07728', closingDate:'2025-08-29', electric:'JCPL (100160727069)', water:'Township of Freehold', gas:'NJNG (220022803509)'},
-  {id:'h25_17', stage:'SOLD', address:'213 Hutton Street, Jersey City, NJ 07307', closingDate:'2025-09-04', electric:'PSEG (7777778307)', water:'Veolia (30300058206744)', gas:'PSEG (7777778307)'},
-  {id:'h25_18', stage:'SOLD', address:'151 Maple Street, Bridgewater, NJ 08807', closingDate:'2025-09-15', electric:'PSEG (7781312902)', water:'American Water (210055868263)', gas:'PSEG (7781312902)'},
-  {id:'h25_19', stage:'SOLD', address:'561 Semel Ave, Iselin, NJ 08830', closingDate:'2025-09-22', electric:'PSEG (7759012101) Job 501123940 Mark Dolan 732-764-3115', water:'Middlesex Water (8883316936)', gas:'Elizabeth TownGas (1854680691)'},
-  {id:'h25_20', stage:'SOLD', address:'192 Mohawk Trail, Wayne, NJ 07470', closingDate:'2025-11-20', electric:'JCPL (100162098683)', water:'Wayne Township', gas:'PSEG (5350311409) Job 80703211'},
-  {id:'h25_21', stage:'SOLD', address:'47 Buckingham Dr, Manchester, NJ 08759', closingDate:'2025-12-01', electric:'JCPL (100161849334)', water:'Manchester Twnship', gas:'NA'},
-  {id:'h25_22', stage:'SOLD', address:'17 Ferris Road, Edison, NJ 08817', closingDate:'2025-12-12', electric:'PSEG (7805326703)', water:'Edison Water Dept', gas:'PSEG (7805326703)'},
-  {id:'h25_23', stage:'SOLD', address:'23 South 4th Ave, Highland Park, NJ 08904', closingDate:'2025-12-18', electric:'PSEG FL1 7785295204 FL2 7787155108 LDS-004222 Job 501148177', water:'Highland Park Water Dept', gas:'PSEG FL1 7785295204 FL2 7787155108'},
-  {id:'h25_24', stage:'SOLD', address:'380 Prospect Street, South Amboy, NJ 08879', closingDate:'2025-12-23', electric:'JCPL (100162921488)', water:'Middlesex Water (6649997711)', gas:'PSEG (7789666606)'},
-  {id:'h25_25', stage:'SOLD', address:'709 Front St, Dunellen, NJ 08812', closingDate:'2025-12-30', electric:'PSEG (7812487318)', water:'American Water (210057952539)', gas:'PSEG (7812487318)'},
-  {id:'h26_01', stage:'SOLD', address:'119 East Rd, Belford, Middletown Township, NJ 07718', type:'Wholetail', purchaseDate:'2025-10-21', purchasePrice:430000, closingDate:'2026-02-03', resalePrice:625000, rehabBudget:49261, totalLoan:481500, acquisitionCost:26516, financingCost:20514, insuranceCost:2619, permitsCost:265, utilitiesCost:1424, sellingCost:32731, netProfit:61670, electric:'JCPL (100165421858)', water:'American Water (210058434492)', gas:'NJNG (220023497523)', notes:'First fully enriched historical record. P&L source: 119eastbelfordnumbers.zip (May 2026).'},
-  {id:'h26_02', stage:'SOLD', address:'179 Fleet Ave, Edison, NJ 08820', closingDate:'2026-02-09', electric:'PSEG (7814737508)', water:'Middlesex Water (2200219514)', gas:'PSEG (7814737508)'},
-  {id:'h26_03', stage:'SOLD', address:'359 Ridgecrest Ave, Staten Island, NY 10312', closingDate:'2026-03-02', electric:'Con Edison (85602332844)', water:'DEP (0000072653001)', gas:'Nation grid gas (5425377023)'}
-];
-
-const STORAGE_KEY = 'dnt-pipeline-v1';
-const THRESHOLDS_KEY = 'dnt-pipeline-thresholds-v1';
-const HISTORICAL_MERGED_KEY = 'dnt-pipeline-historical-merged-v1';
-
-// === Loan-sheet integration ===
-const LOAN_SHEET_FILE_ID = '1CLx9zkZKQE3_Oi97_nA3Kqv616rzOv1seJ7-5lnz6kw';
-const DRAWS_SHEET_FILE_ID = '1N9hYXV4FNY3f1dvRYyK9DEuYTGG7FMcVy0dcc6M-mEg';
-const CONTRACTOR_SHEET_FILE_ID = '12BSbDQf63q9ujQrsHoQh2jKYQJ5l8_pfy9gWK36qxd0';
-const LOAN_SHEET_TOOL = 'mcp__9e44d0f4-5b12-43c6-8202-6b7e52da8845__read_file_content';
-const KIAVI_LIMIT = 10000000;
-
-function normAddr(a) { return (a || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-
-// Stronger normalization for joining loan-sheet rows to pipeline rows.
-// Strips state + ZIP, normalizes street suffixes.
-function loanJoinKey(addr) {
-  if (!addr) return '';
-  let s = String(addr).toLowerCase();
-  s = s.replace(/,?\s*(nj|ny|pa|ct|de)\s*\d{5}.*$/i, '');
-  s = s.replace(/,?\s*\d{5}.*$/, '');
-  s = s.replace(/,?\s*(nj|ny|pa|ct|de)\s*$/i, '');
-  s = s.replace(/\bstreet\b/g, 'st')
-       .replace(/\bavenue\b/g, 'ave')
-       .replace(/\bdrive\b/g, 'dr')
-       .replace(/\bplace\b/g, 'pl')
-       .replace(/\broad\b/g, 'rd')
-       .replace(/\bturnpike\b/g, 'tpke')
-       .replace(/\bcourt\b/g, 'ct')
-       .replace(/\blane\b/g, 'ln')
-       .replace(/\bterrace\b/g, 'ter')
-       .replace(/\bcircle\b/g, 'cir')
-       .replace(/\bboulevard\b/g, 'blvd')
-       .replace(/\btrail\b/g, 'trl')
-       .replace(/\btownship\b/g, '');
-  return s.replace(/[^a-z0-9]/g, '');
-}
-
-function parseMoney(s) {
-  if (s == null) return null;
-  const cleaned = String(s).replace(/[$,\s]/g, '').trim();
-  if (!cleaned || cleaned === '-' || cleaned === '\\-' || cleaned === '—') return null;
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? null : n;
-}
-
-// Idempotent enrichments — fills in empty fields on existing records, never overwrites user edits.
-// Add an entry per property as accounting/QBO data arrives.
-const ENRICHMENTS = [
-  { id: 'h26_01', data: {
-    address: '119 East Rd, Belford, Middletown Township, NJ 07718',
-    type: 'Wholetail',
-    purchaseDate: '2025-10-21',
-    purchasePrice: 430000,
-    resalePrice: 625000,
-    rehabBudget: 49261,
-    totalLoan: 481500,
-    acquisitionCost: 26516,
-    financingCost: 20514,
-    insuranceCost: 2619,
-    permitsCost: 265,
-    utilitiesCost: 1424,
-    sellingCost: 32731,
-    netProfit: 61670
-  }},
-  { id: 'h26_02', data: {
-    address: '179 Fleet Ave, Edison, NJ 08820',
-    type: 'Wholetail',
-    purchaseDate: '2025-09-19',
-    closingDate: '2026-02-09',
-    purchasePrice: 680000,
-    resalePrice: 938000,
-    rehabBudget: 113886.19,
-    totalLoan: 673500,
-    acquisitionCost: 9482.15,
-    financingCost: 30021.80,
-    insuranceCost: 3114.25,
-    permitsCost: 1333.45,
-    utilitiesCost: 1081.22,
-    sellingCost: 44226.31,
-    netProfit: 54854.63
-  }}
-];
-
-function applyEnrichments(props) {
-  let changed = false;
-  ENRICHMENTS.forEach(e => {
-    const prop = props.find(p => p.id === e.id);
-    if (!prop) return;
-    Object.keys(e.data).forEach(k => {
-      if (prop[k] == null || prop[k] === '') {
-        prop[k] = e.data[k];
-        changed = true;
-      }
-    });
-  });
-  if (changed) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(props)); } catch (e) {}
-  }
-  return props;
-}
-
-function loadProperties() {
-  let props;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) props = JSON.parse(raw);
-  } catch (e) {}
-  if (!props) props = JSON.parse(JSON.stringify(INITIAL_DATA));
-
-  // One-time merge of historical records
-  let merged = false;
-  try { merged = localStorage.getItem(HISTORICAL_MERGED_KEY) === 'yes'; } catch (e) {}
-  if (!merged) {
-    const existing = new Set(props.map(p => normAddr(p.address)));
-    const toAdd = HISTORICAL_DATA.filter(p => !existing.has(normAddr(p.address)));
-    props = props.concat(toAdd);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
-      localStorage.setItem(HISTORICAL_MERGED_KEY, 'yes');
-    } catch (e) {}
-  }
-
-  // Apply targeted enrichments (idempotent)
-  props = applyEnrichments(props);
-  return props;
-}
-function persistProperties() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.properties)); } catch (e) {}
-}
-function loadThresholds() {
-  try {
-    const raw = localStorage.getItem(THRESHOLDS_KEY);
-    if (raw) return Object.assign({}, DEFAULT_THRESHOLDS, JSON.parse(raw));
-  } catch (e) {}
-  return Object.assign({}, DEFAULT_THRESHOLDS);
-}
-function persistThresholds() {
-  try { localStorage.setItem(THRESHOLDS_KEY, JSON.stringify(state.thresholds)); } catch (e) {}
-}
-
-let state = {
-  properties: loadProperties(),
-  thresholds: loadThresholds(),
-  activeTab: 'dashboard',
-  activeStageFilter: 'ALL',
-  search: '',
-  sortKey: 'purchaseDate',
-  sortDir: 'desc',
-  editId: null,
-  loanData: { status: 'idle', active: [], closed: [], activeByKey: {}, closedByKey: {}, anomalies: [] },
-  drawsData: { status: 'idle', rows: [], byKey: {}, tablesFound: 0, lastLoaded: null, error: null },
-  contractorData: { status: 'idle', tables: [], allPayments: [], byContractor: {}, byTrade: {}, totalAgreed: 0, totalPaid: 0, totalBalance: 0, lastLoaded: null, error: null }
-};
-let charts = {};
-
-const fmtMoney = n => (n == null || n === '' || isNaN(n)) ? '—' : '$' + Math.round(+n).toLocaleString();
-const fmtMoneyShort = n => {
-  if (n == null || n === '' || isNaN(n)) return '—';
-  n = +n;
-  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
-  if (n >= 1e3) return '$' + Math.round(n/1e3) + 'k';
-  return '$' + n;
-};
-function parseDate(s) {
-  if (!s) return null;
-  if (s instanceof Date) return s;
-  const d = new Date(s);
-  return isNaN(d) ? null : d;
-}
-function fmtDate(s) {
-  const d = parseDate(s);
-  if (!d) return s || '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-function daysBetween(a, b) {
-  const d1 = parseDate(a), d2 = parseDate(b);
-  if (!d1 || !d2) return null;
-  return Math.round((d2 - d1) / 86400000);
-}
-function daysHeld(p) {
-  if (!p.purchaseDate) return null;
-  return daysBetween(p.purchaseDate, new Date());
-}
-function extractCity(address) {
-  if (!address) return '';
-  const parts = address.split(',').map(s => s.trim()).filter(Boolean);
-  if (parts.length >= 2) return parts[parts.length - 2].replace(/\s+(NJ|NY|PA|CT|DE).*$/i, '').trim();
-  return '';
-}
-function uid() { return 'p' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
-
-function thresholdFor(p) {
-  if (!p) return state.thresholds.__default || 180;
-  const t = p.type;
-  if (t && state.thresholds[t] != null) return state.thresholds[t];
-  return state.thresholds.__default || 180;
-}
-function staleStatus(p) {
-  if (!OWNED_STAGES.has(p.stage)) return null;
-  const d = daysHeld(p);
-  if (d == null) return null;
-  const t = thresholdFor(p);
-  if (d > t * 1.5) return 'hot';
-  if (d > t) return 'warm';
-  return 'cool';
-}
-function isStale(p) {
-  const s = staleStatus(p);
-  return s === 'warm' || s === 'hot';
-}
-function historicalAvgByType() {
-  const result = {};
-  state.properties.filter(p => p.stage === 'SOLD' && p.purchaseDate && p.closingDate && p.type).forEach(p => {
-    const d = daysBetween(p.purchaseDate, p.closingDate);
-    if (d == null || d < 0) return;
-    const t = p.type;
-    if (!result[t]) result[t] = { days: 0, count: 0 };
-    result[t].days += d;
-    result[t].count += 1;
-  });
-  const out = {};
-  Object.keys(result).forEach(t => {
-    out[t] = { avg: Math.round(result[t].days / result[t].count), count: result[t].count };
-  });
-  return out;
-}
-function dataCompleteness() {
-  const sold = state.properties.filter(p => p.stage === 'SOLD');
-  const complete = sold.filter(p => p.purchaseDate && p.closingDate && p.type);
-  return { total: sold.length, complete: complete.length };
-}
-
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast'; el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .2s'; }, 1800);
-  setTimeout(() => el.remove(), 2100);
-}
-
-function loanForProperty(p) {
-  if (!state.loanData || !state.loanData.activeByKey) return null;
-  return state.loanData.activeByKey[loanJoinKey(p.address)] || null;
-}
-function closedLoanForProperty(p) {
-  if (!state.loanData || !state.loanData.closedByKey) return null;
-  return state.loanData.closedByKey[loanJoinKey(p.address)] || null;
-}
-function drawsForProperty(p) {
-  if (!state.drawsData || !state.drawsData.byKey) return null;
-  const r = state.drawsData.byKey[loanJoinKey(p.address)];
-  if (!r || !r.totalDrawn) return null;
-  return r;
-}
-
-function filtered() {
-  let arr = state.properties;
-  if (state.activeStageFilter !== 'ALL') arr = arr.filter(p => p.stage === state.activeStageFilter);
-  if (state.search) {
-    const q = state.search.toLowerCase();
-    arr = arr.filter(p => Object.values(p).some(v => v != null && String(v).toLowerCase().includes(q)));
-  }
-  return arr;
-}
-
-function renderDashboard() {
-  renderKPIs();
-  renderStageChart();
-  renderTypeChart();
-  renderYearlyChart();
-  renderCityChart();
-  renderStaleList();
-  renderLifetimeStats();
-}
-
-function renderKPIs() {
-  const props = state.properties;
-  const active = props.filter(p => p.stage !== 'SOLD');
-  const sold = props.filter(p => p.stage === 'SOLD');
-  const thisYear = new Date().getFullYear();
-  const ytdSold = sold.filter(p => {
-    const d = parseDate(p.closingDate);
-    return d && d.getFullYear() === thisYear;
-  });
-
-  const capitalDeployed = active.reduce((s,p) => s + (+p.purchasePrice || 0) + (+p.rehabBudget || 0), 0);
-  const ucSell = props.filter(p => p.stage === 'UC_SELL');
-  const projectedRevenue = ucSell.reduce((s,p) => s + (+p.resalePrice || +p.currentListPrice || 0), 0);
-  const projectedSpread = ucSell.reduce((s,p) => {
-    const sale = +p.resalePrice || +p.currentListPrice || 0;
-    const cost = (+p.purchasePrice || 0) + (+p.rehabBudget || 0);
-    return s + (sale - cost);
-  }, 0);
-
-  const ownedActive = props.filter(p => OWNED_STAGES.has(p.stage));
-  const avgOwnedDays = (() => {
-    const ds = ownedActive.map(p => daysHeld(p)).filter(d => d != null);
-    return ds.length ? Math.round(ds.reduce((a,b) => a+b, 0) / ds.length) : 0;
-  })();
-  const staleProps = ownedActive.filter(p => isStale(p));
-  const hotProps = ownedActive.filter(p => staleStatus(p) === 'hot');
-
-  // Realized P&L from enriched sold records
-  const enrichedSold = sold.filter(p => p.netProfit != null && p.resalePrice);
-  const realizedProfit = enrichedSold.reduce((s,p) => s + (+p.netProfit || 0), 0);
-  const avgNetMarginPct = enrichedSold.length
-    ? (enrichedSold.reduce((s,p) => s + ((+p.netProfit || 0) / (+p.resalePrice || 1)), 0) / enrichedSold.length) * 100
-    : 0;
-
-  const kpis = [
-    { label: 'Active Properties', value: active.length, sub: props.length + ' total on record', cls: '' },
-    { label: 'Capital Deployed', value: fmtMoneyShort(capitalDeployed), sub: 'Purchase + rehab budget', cls: '' },
-    { label: 'Projected Revenue', value: fmtMoneyShort(projectedRevenue), sub: ucSell.length + ' under contract to sell', cls: 'accent' },
-    { label: 'Projected Spread', value: fmtMoneyShort(projectedSpread), sub: 'UC-to-sell gross (excl. soft costs)', cls: 'success' },
-    { label: 'Avg Days Held', value: avgOwnedDays + 'd', sub: ownedActive.length + ' owned properties', cls: '' },
-    { label: 'Stale Properties', value: staleProps.length, sub: hotProps.length ? hotProps.length + ' critical (>1.5× threshold)' : 'Past type-specific threshold', cls: hotProps.length ? 'alert' : staleProps.length ? 'accent' : '' },
-    { label: 'Closed ' + thisYear, value: ytdSold.length, sub: 'Sold year-to-date', cls: 'success' },
-    { label: 'Closed All-Time', value: sold.length, sub: 'Lifetime deal count', cls: '' },
-    { label: 'Realized Profit', value: fmtMoneyShort(realizedProfit), sub: enrichedSold.length + ' of ' + sold.length + ' enriched', cls: 'success' },
-    { label: 'Avg Net Margin', value: enrichedSold.length ? avgNetMarginPct.toFixed(1) + '%' : '—', sub: enrichedSold.length ? 'Net profit / resale across enriched' : 'Needs enriched records', cls: enrichedSold.length ? 'accent' : '' }
-  ];
-
-  // Append financial KPIs if loan data is loaded
-  if (state.loanData && state.loanData.status === 'loaded' && state.loanData.active.length) {
-    const totalLoans = state.loanData.active.reduce((s, r) => s + (r.loanAmount || 0), 0);
-    const monthlyPayments = state.loanData.active.reduce((s, r) => s + (r.payment || 0), 0);
-    kpis.push({ label: 'Active Loan Exposure', value: fmtMoneyShort(totalLoans), sub: state.loanData.active.length + ' loans (live from sheet)', cls: 'accent' });
-    kpis.push({ label: 'Monthly Debt Service', value: fmtMoneyShort(monthlyPayments), sub: fmtMoneyShort(monthlyPayments * 12) + ' annualized', cls: 'alert' });
-  }
-
-  document.getElementById('kpi-grid').innerHTML = kpis.map(k => '<div class="kpi ' + k.cls + '"><div class="kpi-label">' + k.label + '</div><div class="kpi-value">' + k.value + '</div><div class="kpi-sub">' + k.sub + '</div></div>').join('');
-}
-
-function renderStageChart() {
-  const ctx = document.getElementById('chart-stage');
-  if (!ctx) return;
-  const counts = STAGES.map(s => ({
-    stage: s,
-    count: state.properties.filter(p => p.stage === s.id).length,
-    capital: state.properties.filter(p => p.stage === s.id).reduce((sum,p) => sum + (+p.purchasePrice || 0) + (+p.rehabBudget || 0), 0)
-  })).filter(c => c.count > 0 && c.stage.id !== 'SOLD');
-
-  if (charts.stage) charts.stage.destroy();
-  charts.stage = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: counts.map(c => c.stage.label), datasets: [{ label: 'Capital at work', data: counts.map(c => c.capital), backgroundColor: counts.map(c => c.stage.color), borderRadius: 6, borderSkipped: false }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: c => { const s = counts[c.dataIndex]; return fmtMoneyShort(s.capital) + ' across ' + s.count + ' ' + (s.count === 1 ? 'property' : 'properties'); } } }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { beginAtZero: true, ticks: { font: { size: 10 }, callback: v => fmtMoneyShort(v) }, grid: { color: '#eef0f5' } }
-      }
+    function daysAgo(dateStr) {
+      const date = new Date(dateStr);
+      return Math.floor((today - date) / (1000 * 60 * 60 * 24));
     }
-  });
-}
 
-function renderTypeChart() {
-  const ctx = document.getElementById('chart-type');
-  if (!ctx) return;
-  const typeMap = {};
-  state.properties.filter(p => p.stage !== 'SOLD').forEach(p => {
-    const t = p.type || 'Unspecified';
-    typeMap[t] = (typeMap[t] || 0) + 1;
-  });
-  const types = Object.entries(typeMap);
-  const palette = ['#0f1e3d', '#1e3a73', '#c9a24a', '#d4b76a', '#7e93c3', '#a6b4d1'];
-  if (charts.type) charts.type.destroy();
-  charts.type = new Chart(ctx, {
-    type: 'doughnut',
-    data: { labels: types.map(t => t[0]), datasets: [{ data: types.map(t => t[1]), backgroundColor: types.map((_,i) => palette[i % palette.length]), borderWidth: 2, borderColor: '#fff' }] },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '62%',
-      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 10, padding: 8 } } }
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
-  });
-}
 
-function renderYearlyChart() {
-  const ctx = document.getElementById('chart-yearly');
-  if (!ctx) return;
-  const yearMap = {};
-  state.properties.filter(p => p.stage === 'SOLD').forEach(p => {
-    const d = parseDate(p.closingDate);
-    if (!d) return;
-    const y = d.getFullYear();
-    yearMap[y] = (yearMap[y] || 0) + 1;
-  });
-  const years = Object.keys(yearMap).sort();
-  if (charts.yearly) charts.yearly.destroy();
-  charts.yearly = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: years, datasets: [{ label: 'Deals closed', data: years.map(y => yearMap[y]), backgroundColor: years.map((y,i) => i === years.length - 1 ? '#c9a24a' : '#1e3a73'), borderRadius: 6, borderSkipped: false }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: c => yearMap[years[c.dataIndex]] + ' deals closed' } }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 12 } } },
-        y: { beginAtZero: true, ticks: { font: { size: 10 }, precision: 0 }, grid: { color: '#eef0f5' } }
-      }
+    function formatCurrency(val) {
+      return '$' + (val / 1000).toFixed(0) + 'k';
     }
-  });
-}
 
-function renderLifetimeStats() {
-  const el = document.getElementById('lifetime-stats');
-  const sold = state.properties.filter(p => p.stage === 'SOLD');
-  const active = state.properties.filter(p => p.stage !== 'SOLD');
-  const cities = new Set();
-  state.properties.forEach(p => { const c = extractCity(p.address); if (c) cities.add(c); });
-  const typed = sold.filter(p => p.type).length;
-  const complete = dataCompleteness();
-  const rows = [
-    { label: 'Deals closed all-time', val: sold.length },
-    { label: 'Currently active', val: active.length },
-    { label: 'Unique cities', val: cities.size },
-    { label: 'Typed historical', val: typed + ' / ' + sold.length },
-    { label: 'Calibration-ready', val: complete.complete + ' / ' + complete.total }
-  ];
-  el.innerHTML = rows.map(r => '<div class="lifetime-row"><span class="lifetime-label">' + r.label + '</span><span class="lifetime-val">' + r.val + '</span></div>').join('');
-}
-
-function renderCityChart() {
-  const ctx = document.getElementById('chart-city');
-  if (!ctx) return;
-  const cityMap = {};
-  state.properties.filter(p => p.stage !== 'SOLD').forEach(p => {
-    const c = extractCity(p.address) || 'Unknown';
-    if (!cityMap[c]) cityMap[c] = { count: 0, capital: 0 };
-    cityMap[c].count += 1;
-    cityMap[c].capital += (+p.purchasePrice || 0) + (+p.rehabBudget || 0);
-  });
-  const cities = Object.entries(cityMap).sort((a,b) => b[1].capital - a[1].capital).slice(0, 10);
-
-  if (charts.city) charts.city.destroy();
-  charts.city = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: cities.map(c => c[0]), datasets: [{ data: cities.map(c => c[1].capital), backgroundColor: '#1e3a73', borderRadius: 4, borderSkipped: false }] },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: c => { const city = cities[c.dataIndex]; return fmtMoneyShort(city[1].capital) + ' across ' + city[1].count + ' ' + (city[1].count === 1 ? 'property' : 'properties'); } } }
-      },
-      scales: {
-        x: { ticks: { font: { size: 10 }, callback: v => fmtMoneyShort(v) }, grid: { color: '#eef0f5' } },
-        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
-      }
+    function getStageColor(stageId) {
+      const stage = STAGES.find(s => s.id === stageId);
+      return stage ? stage.color : '#888';
     }
-  });
-}
 
-function renderStaleList() {
-  const items = state.properties.filter(p => OWNED_STAGES.has(p.stage))
-    .map(p => ({ p, days: daysHeld(p) || 0, status: staleStatus(p) || 'cool', threshold: thresholdFor(p) }))
-    .filter(x => x.days > 0)
-    .sort((a,b) => (b.days / b.threshold) - (a.days / a.threshold))
-    .slice(0, 8);
-  const html = items.map(({p, days, status, threshold}) => {
-    const pct = Math.round((days / threshold) * 100);
-    return '<div class="stale-item" data-id="' + p.id + '">' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.address + '</div>' +
-        '<div style="font-size:11px;color:var(--text-faint);margin-top:2px;">' + (p.type || '—') + ' · target ≤' + threshold + 'd · ' + (p.stage ? stageMap[p.stage].label : '—') + '</div>' +
-      '</div>' +
-      '<span class="stale-days ' + status + '" title="' + pct + '% of ' + threshold + 'd threshold">' + days + 'd</span>' +
-    '</div>';
-  }).join('');
-  document.getElementById('stale-list-body').innerHTML = html || '<div style="padding:20px 0;text-align:center;color:var(--text-faint);font-size:12px;">No owned properties yet</div>';
-  document.querySelectorAll('#stale-list-body .stale-item').forEach(el => {
-    el.addEventListener('click', () => openEdit(el.dataset.id));
-    el.style.cursor = 'pointer';
-  });
-}
-
-function renderKanban() {
-  const board = document.getElementById('kanban-board');
-  const byStage = {};
-  STAGES.forEach(s => byStage[s.id] = []);
-  state.properties.forEach(p => {
-    if (byStage[p.stage]) byStage[p.stage].push(p);
-    else byStage[p.stage] = [p];
-  });
-  if (byStage.SOLD) byStage.SOLD.sort((a,b) => {
-    const da = parseDate(a.closingDate), db = parseDate(b.closingDate);
-    return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
-  });
-
-  board.innerHTML = STAGES.map(s => {
-    const cards = (byStage[s.id] || []).map(p => renderCard(p, s)).join('');
-    return '<div class="kcol" data-stage="' + s.id + '">' +
-      '<div class="kcol-header"><div class="kcol-name"><span class="kcol-dot" style="background:' + s.color + '"></span>' + s.label + '</div><span class="kcol-count">' + (byStage[s.id] || []).length + '</span></div>' +
-      '<div class="kcol-body" data-stage="' + s.id + '">' + (cards || '<div style="padding:8px;text-align:center;color:var(--text-faint);font-size:11px;">Empty</div>') + '</div>' +
-    '</div>';
-  }).join('');
-
-  document.querySelectorAll('.kcard').forEach(card => {
-    card.draggable = true;
-    card.addEventListener('dragstart', e => { card.classList.add('dragging'); e.dataTransfer.setData('text/plain', card.dataset.id); e.dataTransfer.effectAllowed = 'move'; });
-    card.addEventListener('dragend', () => card.classList.remove('dragging'));
-    card.addEventListener('click', () => openEdit(card.dataset.id));
-  });
-  document.querySelectorAll('.kcol').forEach(col => {
-    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
-    col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
-    col.addEventListener('drop', e => {
-      e.preventDefault();
-      col.classList.remove('drag-over');
-      const id = e.dataTransfer.getData('text/plain');
-      const newStage = col.dataset.stage;
-      const prop = state.properties.find(p => p.id === id);
-      if (prop && prop.stage !== newStage) {
-        prop.stage = newStage;
-        persistProperties();
-        rerenderAll();
-        toast('Moved to ' + stageMap[newStage].label);
-      }
-    });
-  });
-}
-
-function renderCard(p, stage) {
-  const keyDate = p.closingDate || p.proposedClosing || p.ucDate || p.purchaseDate;
-  const keyLabel = p.closingDate ? 'Closed' : p.proposedClosing ? 'Close' : p.ucDate ? 'UC' : 'Bought';
-  const price = p.resalePrice || p.currentListPrice || p.listPrice || p.purchasePrice;
-  const priceLabel = p.resalePrice ? 'Resale' : (p.currentListPrice || p.listPrice) ? 'List' : 'Bought';
-  const days = daysHeld(p);
-  const status = staleStatus(p);
-  const thresh = thresholdFor(p);
-  let daysBadge = '';
-  if (days != null && OWNED_STAGES.has(p.stage)) {
-    const cls = status === 'hot' ? 'hot' : status === 'warm' ? 'warm' : '';
-    const suffix = (status === 'hot' || status === 'warm') ? ' / ' + thresh + 'd' : '';
-    daysBadge = '<span class="tag ' + cls + '" title="' + days + ' days since purchase (threshold ' + thresh + 'd for ' + (p.type || 'default') + ')">' + days + 'd' + suffix + '</span>';
-  }
-
-  // Attach loan-sheet financial overlay if available
-  const loan = loanForProperty(p);
-  let lenderTag = '';
-  let loanLine = '';
-  if (loan) {
-    const lenderClass = /kiavi/i.test(loan.lender || '') ? 'kiavi' : /genesis/i.test(loan.lender || '') ? 'genesis' : '';
-    if (lenderClass) lenderTag = '<span class="tag ' + lenderClass + '" title="Loan amount ' + fmtMoneyShort(loan.loanAmount) + ' · drawn ' + fmtMoneyShort(loan.drawAmount) + '">' + (loan.lender.split(' ')[0]) + '</span>';
-    if (loan.payment) loanLine = '<div class="kcard-line loan"><span>Pmt</span><span style="font-weight:500;">' + fmtMoneyShort(loan.payment) + '/mo' + (loan.rate ? ' @ ' + loan.rate : '') + '</span></div>';
-  }
-
-  // Draws overlay (from Active Draw Payments sheet)
-  const draws = drawsForProperty(p);
-  let drawsTag = '';
-  let drawsLine = '';
-  if (draws) {
-    const drawCount = (draws.draws || []).filter(d => d.amount).length;
-    const lastDate = draws.lastDrawDate ? fmtDate(draws.lastDrawDate) : '—';
-    drawsTag = '<span class="tag draws" title="Drawn ' + fmtMoneyShort(draws.totalDrawn) + ' across ' + drawCount + ' draws · last ' + lastDate + (draws.holdback ? ' · holdback ' + fmtMoneyShort(draws.holdback) : '') + '">' + drawCount + 'x ' + fmtMoneyShort(draws.totalDrawn) + '</span>';
-    drawsLine = '<div class="kcard-line draws"><span>Draws</span><span>' + fmtMoneyShort(draws.totalDrawn) + ' · last ' + lastDate + '</span></div>';
-  }
-
-  return '<div class="kcard" data-id="' + p.id + '">' +
-    '<div class="kcard-stripe" style="background:' + stage.color + '"></div>' +
-    '<div class="kcard-addr">' + (p.address || '(no address)') + '</div>' +
-    '<div class="kcard-meta">' +
-      (p.type ? '<span class="tag type">' + p.type + '</span>' : '') +
-      (price ? '<span class="tag price">' + priceLabel + ': ' + fmtMoneyShort(price) + '</span>' : '') +
-      daysBadge +
-      lenderTag +
-      drawsTag +
-    '</div>' +
-    (keyDate ? '<div class="kcard-line"><span>' + keyLabel + '</span><span style="font-weight:500;color:var(--text);">' + fmtDate(keyDate) + '</span></div>' : '') +
-    (p.realtor ? '<div class="kcard-line"><span>Realtor</span><span style="font-weight:500;color:var(--text);">' + p.realtor + '</span></div>' : '') +
-    loanLine +
-    drawsLine +
-  '</div>';
-}
-
-function renderPills() {
-  const pills = document.getElementById('stage-pills');
-  const total = state.properties.length;
-  const activeAll = state.activeStageFilter === 'ALL' ? 'active' : '';
-  let html = '<button class="pill ' + activeAll + '" data-filter="ALL">All (' + total + ')</button>';
-  STAGES.forEach(s => {
-    const count = state.properties.filter(p => p.stage === s.id).length;
-    if (count === 0) return;
-    const cls = state.activeStageFilter === s.id ? 'active' : '';
-    html += '<button class="pill ' + cls + '" data-filter="' + s.id + '" style="' + (cls ? '' : 'border-left:3px solid ' + s.color) + '">' + s.label + ' (' + count + ')</button>';
-  });
-  pills.innerHTML = html;
-  pills.querySelectorAll('.pill').forEach(btn => {
-    btn.addEventListener('click', () => { state.activeStageFilter = btn.dataset.filter; renderList(); });
-  });
-}
-
-function renderList() {
-  renderPills();
-  const rows = filtered().slice();
-  const k = state.sortKey;
-  rows.sort((a,b) => {
-    let va, vb;
-    if (k === 'daysHeld') { va = daysHeld(a) || 0; vb = daysHeld(b) || 0; }
-    else { va = a[k]; vb = b[k]; }
-    if (va == null && vb == null) return 0;
-    if (va == null) return 1;
-    if (vb == null) return -1;
-    if (k.endsWith('Date') || k === 'listDate' || k === 'closingDate') {
-      const da = parseDate(va), db = parseDate(vb);
-      va = da ? da.getTime() : (typeof va === 'string' ? va : 0);
-      vb = db ? db.getTime() : (typeof vb === 'string' ? vb : 0);
+    function getStageName(stageId) {
+      const stage = STAGES.find(s => s.id === stageId);
+      return stage ? stage.label : stageId;
     }
-    if (typeof va === 'number' && typeof vb === 'number') return state.sortDir === 'asc' ? va - vb : vb - va;
-    return state.sortDir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
-  });
 
-  const tbody = document.getElementById('list-body');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="list-empty">No properties match your filters.</td></tr>';
-  } else {
-    tbody.innerHTML = rows.map(p => {
-      const s = stageMap[p.stage] || { label: p.stage, color: '#888', bg: '#eee', fg: '#333' };
-      const price = p.resalePrice || p.currentListPrice || p.listPrice;
-      const dh = daysHeld(p);
-      const status = staleStatus(p);
-      const thresh = thresholdFor(p);
-      let daysHtml;
-      if (dh == null) daysHtml = '—';
-      else if (OWNED_STAGES.has(p.stage)) {
-        const cls = status === 'hot' ? 'hot' : status === 'warm' ? 'warm' : '';
-        daysHtml = '<div class="days-cell ' + cls + '">' + dh + 'd</div><div class="days-cell-target">target ≤' + thresh + 'd</div>';
-      } else daysHtml = '<div class="days-cell">' + dh + 'd</div>';
-      return '<tr data-id="' + p.id + '">' +
-        '<td><div style="font-weight:500;">' + (p.address || '—') + '</div></td>' +
-        '<td><span class="stage-pill" style="background:' + s.bg + ';color:' + s.fg + ';">' + s.label + '</span></td>' +
-        '<td>' + (p.type || '—') + '</td>' +
-        '<td>' + fmtMoneyShort(p.purchasePrice) + '</td>' +
-        '<td>' + (p.purchaseDate ? fmtDate(p.purchaseDate) : '—') + '</td>' +
-        '<td>' + daysHtml + '</td>' +
-        '<td>' + fmtMoneyShort(price) + '</td>' +
-        '<td>' + (p.closingDate ? fmtDate(p.closingDate) : '—') + '</td>' +
-        '<td>' + (p.realtor || '—') + '</td>' +
-      '</tr>';
-    }).join('');
-    tbody.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => openEdit(tr.dataset.id)));
-  }
-  document.getElementById('list-count').textContent = rows.length + ' shown';
-  document.querySelectorAll('#list-table thead th').forEach(th => {
-    th.classList.toggle('sorted', th.dataset.sort === state.sortKey);
-    const arrow = th.querySelector('.sort-arrow');
-    if (arrow) arrow.textContent = th.dataset.sort === state.sortKey ? (state.sortDir === 'asc' ? '▲' : '▼') : '';
-  });
-}
+    // KPI Calculations
+    const activeCount = PROPERTIES.length;
+    const capitalDeployed = PROPERTIES.reduce((sum, p) => sum + p.purchasePrice, 0);
+    const rehabCount = PROPERTIES.filter(p => p.stage === 'REHAB').length;
+    const ucSellCount = PROPERTIES.filter(p => p.stage === 'UC_SELL').length;
 
-function openEdit(id) {
-  state.editId = id;
-  const p = state.properties.find(x => x.id === id);
-  if (!p) return;
-  document.getElementById('modal-title').textContent = 'Edit property';
-  const form = document.getElementById('edit-form');
-  Array.from(form.elements).forEach(el => {
-    if (el.name && p[el.name] != null) el.value = p[el.name];
-    else if (el.name) el.value = '';
-  });
-  document.getElementById('delete-btn').style.display = '';
-  document.getElementById('modal').hidden = false;
-}
-function openAdd() {
-  state.editId = null;
-  document.getElementById('modal-title').textContent = 'Add property';
-  const form = document.getElementById('edit-form');
-  form.reset();
-  form.elements['stage'].value = 'UC_BUY';
-  document.getElementById('delete-btn').style.display = 'none';
-  document.getElementById('modal').hidden = false;
-}
-function closeModal() { document.getElementById('modal').hidden = true; state.editId = null; }
-function saveEdit() {
-  const form = document.getElementById('edit-form');
-  const data = {};
-  Array.from(form.elements).forEach(el => {
-    if (!el.name) return;
-    let v = el.value.trim();
-    if (el.type === 'number') v = v === '' ? null : +v;
-    data[el.name] = v === '' ? undefined : v;
-  });
-  if (!data.address) { toast('Address required'); return; }
-  if (state.editId) {
-    const i = state.properties.findIndex(p => p.id === state.editId);
-    if (i >= 0) state.properties[i] = Object.assign({}, state.properties[i], data, { id: state.editId });
-    toast('Saved');
-  } else {
-    state.properties.push(Object.assign({}, data, { id: uid() }));
-    toast('Property added');
-  }
-  persistProperties();
-  rerenderAll();
-  closeModal();
-}
-function deleteProp() {
-  if (!state.editId) return;
-  const p = state.properties.find(x => x.id === state.editId);
-  if (!confirm('Delete "' + p.address + '"? This can\'t be undone.')) return;
-  state.properties = state.properties.filter(x => x.id !== state.editId);
-  persistProperties();
-  rerenderAll();
-  closeModal();
-  toast('Deleted');
-}
+    const ytdSold = SOLD.filter(s => {
+      const year = new Date(s.closingDate).getFullYear();
+      return year === 2026;
+    }).length;
 
-function renderThresholdsTable() {
-  const hist = historicalAvgByType();
-  const comp = dataCompleteness();
-  const compBox = document.getElementById('thresh-completeness-box');
-  if (comp.complete === 0 && comp.total > 0) {
-    compBox.innerHTML = '<div class="thresh-completeness">' +
-      '<strong>0 of ' + comp.total + '</strong> sold records have all three of: purchase date, closing date, deal type. ' +
-      'Historical averages will stay empty until you enrich. Edit a sold record (click it in the List tab) and fill in those fields to feed calibration.' +
-    '</div>';
-  } else if (comp.complete < comp.total) {
-    compBox.innerHTML = '<div class="thresh-completeness">' +
-      '<strong>' + comp.complete + ' of ' + comp.total + '</strong> sold records have enough data for calibration. The rest need purchase date, closing date, and deal type to contribute.' +
-    '</div>';
-  } else {
-    compBox.innerHTML = '<div class="thresh-completeness ok">All ' + comp.total + ' sold records are calibration-ready.</div>';
-  }
+    // Avg days held for owned (non-UC) properties
+    const ownedProps = PROPERTIES.filter(p => p.stage !== 'UC_BUY');
+    const avgDaysHeld = ownedProps.length > 0
+      ? Math.round(ownedProps.reduce((sum, p) => sum + daysAgo(p.purchaseDate), 0) / ownedProps.length)
+      : 0;
 
-  const rows = DEAL_TYPES.map(t => {
-    const h = hist[t];
-    const cur = state.thresholds[t] != null ? state.thresholds[t] : (DEFAULT_THRESHOLDS[t] || 180);
-    return '<tr>' +
-      '<td style="font-weight:500;">' + t + '</td>' +
-      '<td><input type="number" min="1" step="5" data-type="' + t + '" value="' + cur + '"></td>' +
-      '<td style="color:var(--text-muted);">' + (h ? h.avg + 'd (n=' + h.count + ')' : '—') + '</td>' +
-      '<td>' + (h ? '<button class="btn" data-apply="' + t + '" data-val="' + h.avg + '" style="padding:4px 10px;font-size:11px;">Apply</button>' : '') + '</td>' +
-    '</tr>';
-  }).join('');
-  const defaultRow = '<tr>' +
-    '<td style="font-weight:500;color:var(--text-muted);">Default (unspecified)</td>' +
-    '<td><input type="number" min="1" step="5" data-type="__default" value="' + (state.thresholds.__default || 180) + '"></td>' +
-    '<td style="color:var(--text-muted);">—</td><td></td></tr>';
-  document.getElementById('thresh-body').innerHTML = rows + defaultRow;
+    // Populate KPIs
+    document.getElementById('subtitle').textContent = `${activeCount} active · ${ytdSold} sold YTD`;
+    document.getElementById('kpi-active').textContent = activeCount;
+    document.getElementById('kpi-capital').textContent = '$' + Math.round(capitalDeployed / 1000000 * 10) / 10 + 'M';
+    document.getElementById('kpi-rehab').textContent = rehabCount;
+    document.getElementById('kpi-uc').textContent = ucSellCount;
+    document.getElementById('kpi-ytd').textContent = ytdSold;
+    document.getElementById('kpi-days').textContent = avgDaysHeld;
 
-  document.querySelectorAll('#thresh-body [data-apply]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const t = btn.dataset.apply;
-      const v = btn.dataset.val;
-      const input = document.querySelector('#thresh-body input[data-type="' + t + '"]');
-      if (input) input.value = v;
-    });
-  });
-}
-function openThresholds() { renderThresholdsTable(); document.getElementById('thresholds-modal').hidden = false; }
-function closeThresholds() { document.getElementById('thresholds-modal').hidden = true; }
-function commitThresholds() {
-  document.querySelectorAll('#thresh-body input[data-type]').forEach(inp => {
-    const t = inp.dataset.type;
-    const v = +inp.value;
-    if (v > 0) state.thresholds[t] = v;
-  });
-  persistThresholds();
-  closeThresholds();
-  rerenderAll();
-  toast('Thresholds saved');
-}
-function resetThresholdsFn() {
-  if (!confirm('Reset thresholds to defaults?')) return;
-  state.thresholds = Object.assign({}, DEFAULT_THRESHOLDS);
-  persistThresholds();
-  renderThresholdsTable();
-  rerenderAll();
-  toast('Thresholds reset');
-}
-
-function exportCSV() {
-  const cols = ['stage','address','type','purchasePrice','purchaseDate','rehabBudget','actualBudget',
-    'listDate','listPrice','currentListPrice','resalePrice','closingDate','mortgageType','mortgageCommitDate',
-    'deposit','realtor','pm','contractor','bedBath','sqft','lockbox','permitNumber',
-    'totalLoan','acquisitionCost','financingCost','insuranceCost','permitsCost','utilitiesCost','sellingCost','netProfit',
-    'electric','water','gas','sewer','titleCompany','attorneyReviewDate','ucDate','proposedClosing','notes'];
-  const header = cols.join(',');
-  const rows = state.properties.map(p => cols.map(c => {
-    const v = p[c] == null ? '' : String(p[c]);
-    return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
-  }).join(','));
-  const csv = [header].concat(rows).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'dnt-properties-' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click(); URL.revokeObjectURL(url);
-  toast('CSV exported');
-}
-function parseCSV(text) {
-  const lines = [];
-  let cur = '', inQ = false, row = [];
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQ) {
-      if (c === '"' && text[i+1] === '"') { cur += '"'; i++; }
-      else if (c === '"') inQ = false;
-      else cur += c;
-    } else {
-      if (c === '"') inQ = true;
-      else if (c === ',') { row.push(cur); cur = ''; }
-      else if (c === '\n' || c === '\r') {
-        if (cur || row.length) { row.push(cur); lines.push(row); }
-        cur = ''; row = [];
-        if (c === '\r' && text[i+1] === '\n') i++;
-      }
-      else cur += c;
-    }
-  }
-  if (cur || row.length) { row.push(cur); lines.push(row); }
-  if (!lines.length) return [];
-  const header = lines[0].map(s => s.trim());
-  return lines.slice(1).filter(r => r.some(v => v && v.trim())).map(r => {
-    const obj = {};
-    header.forEach((h, i) => { obj[h] = (r[i] || '').trim(); });
-    return obj;
-  });
-}
-function importCSV(text) {
-  try {
-    const rows = parseCSV(text);
-    if (!rows.length) { toast('No rows in CSV'); return; }
-    if (!confirm('Import ' + rows.length + ' rows? This will replace current data.')) return;
-    state.properties = rows.map(r => {
-      const p = Object.assign({ id: uid() }, r);
-      ['purchasePrice','rehabBudget','actualBudget','listPrice','currentListPrice','resalePrice','deposit'].forEach(k => {
-        if (p[k] !== '' && p[k] != null) p[k] = +p[k] || 0;
-        else delete p[k];
+    // Pipeline Grid
+    function renderPipelineGrid() {
+      const grid = document.getElementById('pipeline-grid');
+      const stagesWithProps = STAGES.filter(stage => {
+        return PROPERTIES.some(p => p.stage === stage.id);
       });
-      Object.keys(p).forEach(k => { if (p[k] === '') delete p[k]; });
-      if (!p.stage || !stageMap[p.stage]) p.stage = 'REHAB';
-      return p;
-    });
-    persistProperties();
-    rerenderAll();
-    toast('Imported ' + rows.length + ' properties');
-  } catch (e) { toast('Import failed: ' + e.message); }
-}
-function resetData() {
-  if (!confirm('Reset to original data? Your edits and historical merge status will be cleared.')) return;
-  state.properties = JSON.parse(JSON.stringify(INITIAL_DATA)).concat(JSON.parse(JSON.stringify(HISTORICAL_DATA)));
-  persistProperties();
-  try { localStorage.setItem(HISTORICAL_MERGED_KEY, 'yes'); } catch (e) {}
-  rerenderAll();
-  toast('Reset to original data');
-}
 
-// === LOAN SHEET PARSING & LOAD ===
+      stagesWithProps.forEach(stage => {
+        const props = PROPERTIES.filter(p => p.stage === stage.id);
+        const col = document.createElement('div');
+        col.className = 'stage-column';
+        col.style.borderTopColor = stage.color;
 
-function splitMarkdownRow(line) {
-  // Strip the leading and trailing | then split.
-  let s = line.trim();
-  if (s.startsWith('|')) s = s.slice(1);
-  if (s.endsWith('|')) s = s.slice(0, -1);
-  return s.split('|').map(c => c.trim());
-}
+        const header = document.createElement('div');
+        header.className = 'stage-header';
+        header.style.borderTopColor = stage.color;
 
-function parseLoanSheetMarkdown(text) {
-  const result = { active: [], closed: [], tablesFound: 0 };
-  if (!text) return result;
-  const blocks = text.split(/\n\s*\n/);
-  for (const block of blocks) {
-    const lines = block.trim().split('\n').filter(l => l.trim());
-    if (lines.length < 3) continue;
-    if (!lines[0].trim().startsWith('|')) continue;
-    if (!lines[1].includes(':-:')) continue;
-    result.tablesFound++;
-    const headers = splitMarkdownRow(lines[0]);
-    const dataLines = lines.slice(2);
-    const rows = dataLines.map(splitMarkdownRow);
-    const headerStr = headers.join(' | ').toLowerCase();
-    const isActive = headerStr.includes('total loan amounts') && headerStr.includes('total draw amounts');
-    const isClosed = headerStr.includes('closed date') && (headerStr.includes('resale price') || headerStr.includes('closed price'));
+        const title = document.createElement('div');
+        title.className = 'stage-title';
+        title.textContent = stage.label;
 
-    if (isActive) {
-      for (const cells of rows) {
-        if (cells.length < 8) continue;
-        const address = cells[0];
-        if (!address || /^total$/i.test(address) || /joint venture/i.test(address) || /signed contract/i.test(address)) continue;
-        if (!/\d/.test(address)) continue;
-        // Two payment columns: col 7 (named) and col 8 (blank-named) — use whichever has a value.
-        let payment = parseMoney(cells[7]);
-        if (!payment) payment = parseMoney(cells[8]);
-        result.active.push({
-          address, purchaseDate: cells[1] || null,
-          purchasePrice: parseMoney(cells[2]), lender: cells[3] || null,
-          loanNumber: cells[4] || null, loanAmount: parseMoney(cells[5]),
-          drawAmount: parseMoney(cells[6]), payment,
-          rate: cells[9] || null
+        const badge = document.createElement('div');
+        badge.className = 'stage-badge';
+        badge.textContent = props.length;
+
+        header.appendChild(title);
+        header.appendChild(badge);
+        col.appendChild(header);
+
+        const cards = document.createElement('div');
+        cards.className = 'stage-cards';
+
+        props.forEach(prop => {
+          const card = document.createElement('div');
+          card.className = 'property-card';
+          card.textContent = prop.address;
+          cards.appendChild(card);
         });
-      }
-    } else if (isClosed) {
-      const findCol = (...names) => {
-        for (const name of names) {
-          const idx = headers.findIndex(h => h.toLowerCase().trim() === name.toLowerCase().trim());
-          if (idx >= 0) return idx;
-        }
-        for (const name of names) {
-          const idx = headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
-          if (idx >= 0) return idx;
-        }
-        return -1;
-      };
-      const cols = {
-        address: findCol('address', 'closed property', 'closed  property'),
-        purchaseDate: findCol('purchase date'),
-        closedDate: findCol('closed date'),
-        purchasePrice: findCol('purchase price'),
-        resalePrice: findCol('resale price', 'closed price'),
-        lender: findCol('lender'),
-        loanAmount: findCol('loan amount', 'foa loan amount', 'roc loan amount', 'lending home amount', 'verus loan amount'),
-        loanPayment: findCol('loan payment'),
-        drawAmount: findCol('total draw amounts', 'total draw')
-      };
-      for (const cells of rows) {
-        const address = cols.address >= 0 ? cells[cols.address] : null;
-        if (!address || /^total$/i.test(address) || /^no_header/i.test(address)) continue;
-        if (!/\d/.test(address)) continue;
-        result.closed.push({
-          address,
-          purchaseDate: cols.purchaseDate >= 0 ? cells[cols.purchaseDate] : null,
-          closedDate: cols.closedDate >= 0 ? cells[cols.closedDate] : null,
-          purchasePrice: cols.purchasePrice >= 0 ? parseMoney(cells[cols.purchasePrice]) : null,
-          resalePrice: cols.resalePrice >= 0 ? parseMoney(cells[cols.resalePrice]) : null,
-          lender: cols.lender >= 0 ? cells[cols.lender] : null,
-          loanAmount: cols.loanAmount >= 0 ? parseMoney(cells[cols.loanAmount]) : null,
-          loanPayment: cols.loanPayment >= 0 ? parseMoney(cells[cols.loanPayment]) : null,
-          drawAmount: cols.drawAmount >= 0 ? parseMoney(cells[cols.drawAmount]) : null
-        });
-      }
+
+        col.appendChild(cards);
+        grid.appendChild(col);
+      });
     }
-  }
-  return result;
-}
 
-function detectLoanAnomalies(parsed) {
-  const out = [];
-  for (const r of parsed.active) {
-    if (!r.lender) out.push({ severity: 'mid', address: r.address, issue: 'Missing lender' });
-    if (r.lender && /kiavi/i.test(r.lender) && !r.rate) out.push({ severity: 'low', address: r.address, issue: 'Missing rate (Kiavi loans typically ~9.25%)' });
-    if (!r.payment) out.push({ severity: 'high', address: r.address, issue: 'Missing monthly payment' });
-    if (!r.loanAmount) out.push({ severity: 'high', address: r.address, issue: 'Missing loan amount' });
-    if (r.drawAmount && r.loanAmount && r.drawAmount > r.loanAmount) out.push({ severity: 'high', address: r.address, issue: 'Draws ($' + Math.round(r.drawAmount).toLocaleString() + ') exceed loan amount ($' + Math.round(r.loanAmount).toLocaleString() + ')' });
-  }
-  // Pipeline records that have a purchasePrice but no loan-sheet match
-  const sheetKeys = new Set(parsed.active.map(r => loanJoinKey(r.address)));
-  for (const p of state.properties.filter(x => OWNED_STAGES.has(x.stage))) {
-    if (p.purchasePrice && !sheetKeys.has(loanJoinKey(p.address))) {
-      out.push({ severity: 'mid', address: p.address, issue: 'In Pipeline but not in loan sheet — cash deal, JV, or off-book?' });
-    }
-  }
-  // Closed-side: detect fused "loanPayment" values like "4016.914207.19" by scanning anomalously-large floats
-  for (const r of parsed.closed) {
-    if (r.loanPayment && r.loanPayment > 50000) {
-      out.push({ severity: 'low', address: r.address + ' (closed)', issue: 'Suspect fused loan payment value: ' + r.loanPayment });
-    }
-  }
-  return out;
-}
+    renderPipelineGrid();
 
-async function loadLoanSheet() {
-  if (!window.cowork || typeof window.cowork.callMcpTool !== 'function') {
-    state.loanData = { status: 'unavailable', active: [], closed: [], activeByKey: {}, closedByKey: {}, anomalies: [], error: 'Drive MCP not available in this environment.' };
-    rerenderFinancials();
-    return;
-  }
-  state.loanData = Object.assign({}, state.loanData, { status: 'loading' });
-  rerenderFinancials();
-  try {
-    const result = await window.cowork.callMcpTool(LOAN_SHEET_TOOL, { fileId: LOAN_SHEET_FILE_ID });
-    let text = '';
-    if (typeof result === 'string') text = result;
-    else if (result && typeof result.fileContent === 'string') text = result.fileContent;
-    else if (result && typeof result.content === 'string') text = result.content;
-    else if (result && Array.isArray(result.content)) {
-      text = result.content.map(c => (c && c.text) ? c.text : (typeof c === 'string' ? c : '')).join('\n');
-    } else if (result) {
-      text = JSON.stringify(result);
-    }
-    // Some MCP wrappers double-encode JSON; try to extract fileContent if present in a string
-    if (text && text.startsWith('{') && text.includes('"fileContent"')) {
-      try {
-        const j = JSON.parse(text);
-        if (j.fileContent) text = j.fileContent;
-      } catch (e) {}
-    }
-    const parsed = parseLoanSheetMarkdown(text);
-    state.loanData = {
-      status: 'loaded',
-      active: parsed.active,
-      closed: parsed.closed,
-      activeByKey: Object.fromEntries(parsed.active.map(r => [loanJoinKey(r.address), r])),
-      closedByKey: Object.fromEntries(parsed.closed.map(r => [loanJoinKey(r.address), r])),
-      anomalies: detectLoanAnomalies(parsed),
-      tablesFound: parsed.tablesFound,
-      lastLoaded: new Date()
-    };
-    toast('Loan data refreshed');
-  } catch (e) {
-    state.loanData = Object.assign({}, state.loanData, { status: 'error', error: (e && e.message) || String(e) });
-  }
-  rerenderAll();
-}
+    // Charts
+    function initCharts() {
+      // Stage chart
+      const stageCounts = STAGES.map(stage => {
+        return PROPERTIES.filter(p => p.stage === stage.id).length;
+      }).reverse();
 
-// === Active Draw Payments parser ===
-// Sheet has one table per year-tab. Header pattern includes "Draw #1", "Holdback", and "REMAINING".
-// Address is column 0 (or sometimes blank header on historical tabs — we still read col 0).
-function parseDrawsSheetMarkdown(text) {
-  const result = { rows: [], tablesFound: 0 };
-  if (!text) return result;
-  const blocks = text.split(/\n\s*\n/);
-  for (const block of blocks) {
-    const lines = block.trim().split('\n').filter(l => l.trim());
-    if (lines.length < 3) continue;
-    if (!lines[0].trim().startsWith('|')) continue;
-    if (!lines[1].includes(':-:')) continue;
-    const headers = splitMarkdownRow(lines[0]).map(h => h.trim());
-    const headerStr = headers.join(' | ').toLowerCase().replace(/\\#/g, '#');
-    // Must look like a draws table
-    if (!headerStr.includes('holdback')) continue;
-    if (!/draw\s*#?\s*1/.test(headerStr)) continue;
-    if (headerStr.includes('no_header')) continue;
-    result.tablesFound++;
+      const stageLabels = STAGES.map(s => s.label).reverse();
+      const stageColors = STAGES.map(s => s.color).reverse();
 
-    const dateColIdxs = [];
-    const drawColIdxs = [];
-    headers.forEach((h, i) => {
-      const hl = h.toLowerCase().replace(/\\#/g, '#');
-      if (/date\s*ordered/.test(hl)) dateColIdxs.push(i);
-      else if (/^draw\s*#?\s*\d+/.test(hl) || /^draw\s+#\d/.test(hl)) drawColIdxs.push(i);
-    });
-    const holdbackIdx = headers.findIndex(h => /con(s)?ruction\s*holdback/i.test(h));
-    const remainingIdx = headers.findIndex(h => /^remaining/i.test(h.trim()));
-
-    const dataLines = lines.slice(2);
-    for (const line of dataLines) {
-      const cells = splitMarkdownRow(line);
-      const address = (cells[0] || '').trim();
-      if (!address || !/\d/.test(address)) continue;
-      if (/^total$/i.test(address) || /^no_header/i.test(address)) continue;
-
-      const draws = [];
-      const pairs = Math.min(dateColIdxs.length, drawColIdxs.length);
-      for (let k = 0; k < pairs; k++) {
-        const date = (cells[dateColIdxs[k]] || '').trim();
-        const amt = parseMoney(cells[drawColIdxs[k]]);
-        if (date || amt) draws.push({ date: date || null, amount: amt, num: k + 1 });
-      }
-      const totalDrawn = draws.reduce((s, d) => s + (d.amount || 0), 0);
-      const holdback = holdbackIdx >= 0 ? parseMoney(cells[holdbackIdx]) : null;
-      const remaining = remainingIdx >= 0 ? parseMoney(cells[remainingIdx]) : null;
-      let lastDrawDate = null;
-      for (const d of draws) {
-        if (d.date && d.amount) {
-          const dt = parseDate(d.date);
-          if (dt && (!lastDrawDate || dt > lastDrawDate)) lastDrawDate = dt;
-        }
-      }
-      // Skip totally-empty rows ($0 holdback + no draws)
-      if (!totalDrawn && !holdback && !remaining) continue;
-      result.rows.push({ address, holdback, totalDrawn, remaining, draws, lastDrawDate });
-    }
-  }
-  return result;
-}
-
-function indexDrawsByKey(rows) {
-  const byKey = {};
-  for (const r of rows) {
-    const key = loanJoinKey(r.address);
-    if (!key) continue;
-    if (!byKey[key]) byKey[key] = {
-      address: r.address, totalDrawn: 0, holdback: 0, remaining: 0,
-      draws: [], lastDrawDate: null, occurrences: 0
-    };
-    const agg = byKey[key];
-    agg.totalDrawn += r.totalDrawn || 0;
-    agg.holdback += r.holdback || 0;
-    agg.remaining += r.remaining || 0;
-    agg.draws = agg.draws.concat(r.draws);
-    agg.occurrences += 1;
-    if (r.lastDrawDate && (!agg.lastDrawDate || r.lastDrawDate > agg.lastDrawDate)) {
-      agg.lastDrawDate = r.lastDrawDate;
-    }
-  }
-  return byKey;
-}
-
-async function loadDrawsSheet() {
-  if (!window.cowork || typeof window.cowork.callMcpTool !== 'function') {
-    state.drawsData = Object.assign({}, state.drawsData, { status: 'unavailable', error: 'Drive MCP not available.' });
-    rerenderFinancials();
-    return;
-  }
-  state.drawsData = Object.assign({}, state.drawsData, { status: 'loading' });
-  rerenderFinancials();
-  try {
-    const result = await window.cowork.callMcpTool(LOAN_SHEET_TOOL, { fileId: DRAWS_SHEET_FILE_ID });
-    let text = '';
-    if (typeof result === 'string') text = result;
-    else if (result && typeof result.fileContent === 'string') text = result.fileContent;
-    else if (result && typeof result.content === 'string') text = result.content;
-    else if (result && Array.isArray(result.content)) {
-      text = result.content.map(c => (c && c.text) ? c.text : (typeof c === 'string' ? c : '')).join('\n');
-    } else if (result) {
-      text = JSON.stringify(result);
-    }
-    if (text && text.startsWith('{') && text.includes('"fileContent"')) {
-      try { const j = JSON.parse(text); if (j.fileContent) text = j.fileContent; } catch (e) {}
-    }
-    const parsed = parseDrawsSheetMarkdown(text);
-    state.drawsData = {
-      status: 'loaded',
-      rows: parsed.rows,
-      byKey: indexDrawsByKey(parsed.rows),
-      tablesFound: parsed.tablesFound,
-      lastLoaded: new Date(),
-      error: null
-    };
-    toast('Draw payments refreshed');
-  } catch (e) {
-    state.drawsData = Object.assign({}, state.drawsData, { status: 'error', error: (e && e.message) || String(e) });
-  }
-  rerenderAll();
-}
-
-// === Contractor Payments parser ===
-// Each table = one property's contractor sheet. Address lives in tab name (not in markdown).
-// Columns: Contractor, Trade, Estimated, Agreed, then alternating Payment Date / Payment, ending Total Balance, Notes.
-function parseContractorSheetMarkdown(text) {
-  const result = { tables: [], allPayments: [] };
-  if (!text) return result;
-  const blocks = text.split(/\n\s*\n/);
-  let propertyIndex = 0;
-  for (const block of blocks) {
-    const lines = block.trim().split('\n').filter(l => l.trim());
-    if (lines.length < 3) continue;
-    if (!lines[0].trim().startsWith('|')) continue;
-    if (!lines[1].includes(':-:')) continue;
-    const headers = splitMarkdownRow(lines[0]).map(h => h.trim());
-    const headerStr = headers.join(' | ').toLowerCase();
-    if (!headerStr.includes('contractor') || !headerStr.includes('trade')) continue;
-    if (!headerStr.includes('agreed')) continue;
-    propertyIndex++;
-    const tableRows = [];
-    const tablePayments = [];
-    let totalAgreed = 0, totalPaid = 0, totalBalance = 0;
-
-    // Find column indices
-    const contractorIdx = headers.findIndex(h => /^contractor/i.test(h));
-    const tradeIdx = headers.findIndex(h => /^trade/i.test(h));
-    const estimatedIdx = headers.findIndex(h => /estimated/i.test(h));
-    const agreedIdx = headers.findIndex(h => /agreed/i.test(h));
-    const balanceIdx = headers.findIndex(h => /total\s*balance/i.test(h));
-    const notesIdx = headers.findIndex(h => /notes/i.test(h));
-    // Pairs of payment-date / payment
-    const payDateIdxs = [], payAmtIdxs = [];
-    headers.forEach((h, i) => {
-      if (/payment\s*date/i.test(h)) payDateIdxs.push(i);
-      else if (/^payment$/i.test(h)) payAmtIdxs.push(i);
-    });
-
-    const dataLines = lines.slice(2);
-    for (const line of dataLines) {
-      const cells = splitMarkdownRow(line);
-      const contractor = contractorIdx >= 0 ? (cells[contractorIdx] || '').trim() : '';
-      const trade = tradeIdx >= 0 ? (cells[tradeIdx] || '').trim() : '';
-      const estimated = estimatedIdx >= 0 ? parseMoney(cells[estimatedIdx]) : null;
-      const agreed = agreedIdx >= 0 ? parseMoney(cells[agreedIdx]) : null;
-      const balance = balanceIdx >= 0 ? parseMoney(cells[balanceIdx]) : null;
-      const notes = notesIdx >= 0 ? (cells[notesIdx] || '').trim() : '';
-      const payments = [];
-      let rowPaid = 0;
-      const pairs = Math.min(payDateIdxs.length, payAmtIdxs.length);
-      for (let k = 0; k < pairs; k++) {
-        const date = (cells[payDateIdxs[k]] || '').trim();
-        const amt = parseMoney(cells[payAmtIdxs[k]]);
-        if (date || amt) {
-          payments.push({ date: date || null, amount: amt, propertyIndex });
-          if (amt) {
-            rowPaid += amt;
-            tablePayments.push({ date: date || null, amount: amt, contractor, trade, propertyIndex });
+      const stageCtx = document.getElementById('stageChart').getContext('2d');
+      new Chart(stageCtx, {
+        type: 'bar',
+        data: {
+          labels: stageLabels,
+          datasets: [{
+            label: 'Properties',
+            data: stageCounts,
+            backgroundColor: stageColors,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#d4a82c',
+              bodyColor: '#c9d4e8'
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(28, 37, 56, 0.5)' },
+              ticks: { color: '#8b95b0' }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: '#8b95b0' }
+            }
           }
         }
-      }
-      // Skip rows with no contractor, no agreed, no payments, no notes
-      if (!contractor && !agreed && rowPaid === 0 && !notes) continue;
-      tableRows.push({ contractor, trade, estimated, agreed, paid: rowPaid, balance, payments, notes });
-      totalAgreed += agreed || 0;
-      totalPaid += rowPaid;
-      totalBalance += balance || 0;
-    }
-    // Only include tables that have any real activity
-    if (tablePayments.length || totalAgreed) {
-      result.tables.push({ propertyIndex, rows: tableRows, totalAgreed, totalPaid, totalBalance, paymentCount: tablePayments.length });
-      result.allPayments = result.allPayments.concat(tablePayments);
-    }
-  }
-  return result;
-}
-
-async function loadContractorSheet() {
-  if (!window.cowork || typeof window.cowork.callMcpTool !== 'function') {
-    state.contractorData = Object.assign({}, state.contractorData, { status: 'unavailable', error: 'Drive MCP not available.' });
-    rerenderFinancials();
-    return;
-  }
-  state.contractorData = Object.assign({}, state.contractorData, { status: 'loading' });
-  rerenderFinancials();
-  try {
-    const result = await window.cowork.callMcpTool(LOAN_SHEET_TOOL, { fileId: CONTRACTOR_SHEET_FILE_ID });
-    let text = '';
-    if (typeof result === 'string') text = result;
-    else if (result && typeof result.fileContent === 'string') text = result.fileContent;
-    else if (result && typeof result.content === 'string') text = result.content;
-    else if (result && Array.isArray(result.content)) {
-      text = result.content.map(c => (c && c.text) ? c.text : (typeof c === 'string' ? c : '')).join('\n');
-    } else if (result) {
-      text = JSON.stringify(result);
-    }
-    if (text && text.startsWith('{') && text.includes('"fileContent"')) {
-      try { const j = JSON.parse(text); if (j.fileContent) text = j.fileContent; } catch (e) {}
-    }
-    const parsed = parseContractorSheetMarkdown(text);
-    // Roll up by contractor and by trade
-    const byContractor = {}, byTrade = {};
-    let totalAgreed = 0, totalPaid = 0, totalBalance = 0;
-    for (const t of parsed.tables) {
-      totalAgreed += t.totalAgreed; totalPaid += t.totalPaid; totalBalance += t.totalBalance;
-      for (const r of t.rows) {
-        if (r.contractor) {
-          if (!byContractor[r.contractor]) byContractor[r.contractor] = { paid: 0, count: 0 };
-          byContractor[r.contractor].paid += r.paid || 0;
-          byContractor[r.contractor].count += (r.payments || []).filter(p => p.amount).length;
-        }
-        if (r.trade) {
-          if (!byTrade[r.trade]) byTrade[r.trade] = { paid: 0, count: 0 };
-          byTrade[r.trade].paid += r.paid || 0;
-          byTrade[r.trade].count += (r.payments || []).filter(p => p.amount).length;
-        }
-      }
-    }
-    state.contractorData = {
-      status: 'loaded',
-      tables: parsed.tables,
-      allPayments: parsed.allPayments,
-      byContractor, byTrade,
-      totalAgreed, totalPaid, totalBalance,
-      lastLoaded: new Date(),
-      error: null
-    };
-    toast('Contractor payments refreshed');
-  } catch (e) {
-    state.contractorData = Object.assign({}, state.contractorData, { status: 'error', error: (e && e.message) || String(e) });
-  }
-  rerenderFinancials();
-}
-
-function rerenderFinancials() {
-  if (!document.getElementById('panel-financials')) return;
-  renderFinancialsPanel();
-}
-
-function renderFinancialsPanel() {
-  const ld = state.loanData || {};
-  const panel = document.getElementById('panel-financials');
-  if (!panel) return;
-
-  const escapeHtml = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-  let statusHtml = '';
-  if (ld.status === 'loading') {
-    statusHtml = '<div class="fin-status loading">Loading loan data from Drive…</div>';
-  } else if (ld.status === 'error') {
-    statusHtml = '<div class="fin-status error"><strong>Couldn\'t load loan data:</strong> ' + (ld.error || 'unknown error') + ' <button class="btn" id="fin-retry">Retry</button></div>';
-  } else if (ld.status === 'unavailable') {
-    statusHtml = '<div class="fin-status warn">Live Drive sync isn\'t available in this environment. The artifact still works, but loan-sheet overlays won\'t populate. <button class="btn" id="fin-retry">Try Again</button></div>';
-  } else if (ld.status === 'loaded') {
-    statusHtml = '<div class="fin-status ok">' + ld.active.length + ' active loans, ' + ld.closed.length + ' closed records, ' + ld.tablesFound + ' tables parsed · Loaded ' + ld.lastLoaded.toLocaleTimeString() + ' <button class="btn" id="fin-refresh-now">Refresh from Drive</button></div>';
-  } else {
-    statusHtml = '<div class="fin-status loading">Click "Load from Drive" to fetch the Active Properties &amp; Loan Amounts sheet. <button class="btn btn-primary" id="fin-load-now" style="margin-left:auto;">Load from Drive</button></div>';
-  }
-
-  // Helper closures for the new sections (used by both early-exit and full-render paths)
-  function buildDrawsSection() {
-    const dd = state.drawsData || {};
-    const drawsHead = (statusLabel, statusClass, meta) =>
-      '<div class="fin-section-head">' +
-        '<span>Active Draw Payments <span class="section-meta">' + (meta || '') + '</span></span>' +
-        '<span class="section-status ' + statusClass + '">' + statusLabel + ' <button class="btn" id="draws-refresh" style="margin-left:8px;padding:2px 8px;font-size:10.5px;">Refresh</button></span>' +
-      '</div>';
-    if (dd.status === 'loading') return drawsHead('Loading…', 'loading', '');
-    if (dd.status === 'error') return drawsHead('Error', 'error', escapeHtml(dd.error || '')) +
-      '<div class="fin-card"><div style="font-size:12px;color:var(--danger);">Couldn\'t load draws sheet: ' + escapeHtml(dd.error || '') + '</div></div>';
-    if (dd.status === 'unavailable') return drawsHead('Unavailable', 'warn', '') +
-      '<div class="fin-card"><div style="font-size:12px;color:var(--text-muted);">Live Drive sync not available in this environment.</div></div>';
-    if (dd.status !== 'loaded') return drawsHead('Click refresh to load', 'warn', '');
-
-    const drawsRows = dd.rows || [];
-    const totalDrawn = drawsRows.reduce((s, r) => s + (r.totalDrawn || 0), 0);
-    const totalHoldback = drawsRows.reduce((s, r) => s + (r.holdback || 0), 0);
-    const totalRemaining = drawsRows.reduce((s, r) => s + (r.remaining || 0), 0);
-    const totalDrawCount = drawsRows.reduce((s, r) => s + (r.draws || []).filter(d => d.amount).length, 0);
-    const propsWithDraws = Object.keys(dd.byKey || {}).length;
-    const ownedAddrs = state.properties.filter(p => OWNED_STAGES.has(p.stage));
-    const hydrated = ownedAddrs.filter(p => drawsForProperty(p)).length;
-    const allDraws = [];
-    for (const r of drawsRows) {
-      for (const d of (r.draws || [])) {
-        if (d.amount && d.date) {
-          const dt = parseDate(d.date);
-          if (dt) allDraws.push({ date: dt, dateStr: d.date, amount: d.amount, address: r.address, num: d.num });
-        }
-      }
-    }
-    allDraws.sort((a, b) => b.date - a.date);
-    const recentDraws = allDraws.slice(0, 12);
-
-    const ldLocal = state.loanData || {};
-    const mergedHtml = (ldLocal.active && ldLocal.active.length) ? (function() {
-      const merged = ldLocal.active.map(loan => {
-        const key = loanJoinKey(loan.address);
-        const d = (dd.byKey || {})[key];
-        return { loan, draws: d };
       });
-      return '<div class="fin-card">' +
-        '<div class="fin-card-title">Active Loans &times; Draw Status <span class="badge">' + merged.length + ' loans</span></div>' +
-        '<div style="overflow-x:auto;">' +
-        '<table class="fin-table">' +
-          '<thead><tr>' +
-            '<th>Address</th><th>Lender</th>' +
-            '<th class="num">Loan Amt</th>' +
-            '<th class="num">Sheet Drawn</th>' +
-            '<th class="num">Draw Sheet Drawn</th>' +
-            '<th class="num">Draw Count</th>' +
-            '<th class="num">Last Draw</th>' +
-            '<th class="num">Remaining</th>' +
-            '<th>Progress</th>' +
-          '</tr></thead><tbody>' +
-          merged.map(m => {
-            const lc = /kiavi/i.test(m.loan.lender || '') ? 'kiavi' : /genesis/i.test(m.loan.lender || '') ? 'genesis' : '';
-            const drawn = m.draws ? m.draws.totalDrawn : 0;
-            const remaining = m.draws && m.draws.remaining != null ? m.draws.remaining : ((m.draws && m.draws.holdback) ? Math.max(0, m.draws.holdback - drawn) : null);
-            const drawCount = m.draws ? (m.draws.draws || []).filter(d => d.amount).length : 0;
-            const lastDate = m.draws && m.draws.lastDrawDate ? fmtDate(m.draws.lastDrawDate) : '—';
-            const pct = m.draws && m.draws.holdback ? Math.min(100, (drawn / m.draws.holdback) * 100) : 0;
-            return '<tr>' +
-              '<td>' + escapeHtml(m.loan.address) + '</td>' +
-              '<td><span class="lender-pill ' + lc + '">' + escapeHtml(m.loan.lender || '—') + '</span></td>' +
-              '<td class="num">' + fmtMoneyShort(m.loan.loanAmount) + '</td>' +
-              '<td class="num">' + fmtMoneyShort(m.loan.drawAmount) + '</td>' +
-              '<td class="num">' + fmtMoneyShort(drawn || null) + '</td>' +
-              '<td class="num">' + (drawCount || '<span class="muted">0</span>') + '</td>' +
-              '<td class="num">' + lastDate + '</td>' +
-              '<td class="num">' + fmtMoneyShort(remaining) + '</td>' +
-              '<td><div class="draw-progress" title="' + pct.toFixed(0) + '% of holdback drawn"><div class="draw-progress-fill" style="width:' + pct + '%"></div></div></td>' +
-            '</tr>';
-          }).join('') +
-        '</tbody></table></div>' +
-        '<div class="fin-card-sub">"Sheet Drawn" = total from Loan sheet column · "Draw Sheet Drawn" = sum across individual draws on the Active Draw Payments sheet. Differences indicate the two sheets are out of sync.</div>' +
-      '</div>';
-    })() : '';
 
-    return drawsHead('Loaded ' + dd.lastLoaded.toLocaleTimeString(), 'ok', dd.tablesFound + ' tabs · ' + drawsRows.length + ' rows · ' + propsWithDraws + ' unique properties · ' + hydrated + '/' + ownedAddrs.length + ' active cards hydrated') +
-      '<div class="fin-tiles">' +
-        '<div class="fin-tile"><div class="ft-label">Lifetime Drawn</div><div class="ft-value">' + fmtMoneyShort(totalDrawn) + '</div><div class="ft-sub">' + totalDrawCount + ' individual draws across ' + dd.tablesFound + ' year-tabs</div></div>' +
-        '<div class="fin-tile"><div class="ft-label">Holdback Pool</div><div class="ft-value">' + fmtMoneyShort(totalHoldback) + '</div><div class="ft-sub">Original construction holdbacks budgeted</div></div>' +
-        '<div class="fin-tile"><div class="ft-label">Remaining Available</div><div class="ft-value">' + fmtMoneyShort(totalRemaining) + '</div><div class="ft-sub">Across all properties · sum of "REMAINING Holdback"</div></div>' +
-        '<div class="fin-tile"><div class="ft-label">Cards Hydrated</div><div class="ft-value">' + hydrated + ' / ' + ownedAddrs.length + '</div><div class="ft-sub">Active pipeline properties matched to draws by address</div></div>' +
-      '</div>' +
-      mergedHtml +
-      (recentDraws.length ? '<div class="fin-card">' +
-        '<div class="fin-card-title">Recent Draw Activity <span class="badge">last ' + recentDraws.length + '</span></div>' +
-        '<div style="overflow-x:auto;">' +
-          '<table class="fin-table">' +
-            '<thead><tr><th>Date</th><th>Property</th><th class="num">Draw #</th><th class="num">Amount</th></tr></thead><tbody>' +
-            recentDraws.map(d => '<tr>' +
-              '<td>' + fmtDate(d.dateStr) + '</td>' +
-              '<td>' + escapeHtml(d.address) + '</td>' +
-              '<td class="num">#' + d.num + '</td>' +
-              '<td class="num">' + fmtMoneyShort(d.amount) + '</td>' +
-            '</tr>').join('') +
-          '</tbody></table>' +
-        '</div></div>' : '');
-  }
+      // Type chart - active only
+      const typeCounts = {};
+      PROPERTIES.forEach(p => {
+        typeCounts[p.type] = (typeCounts[p.type] || 0) + 1;
+      });
 
-  function buildContractorSection() {
-    const cd = state.contractorData || {};
-    const contractorHead = (statusLabel, statusClass, meta) =>
-      '<div class="fin-section-head">' +
-        '<span>Contractor Payments <span class="section-meta">' + (meta || '') + '</span></span>' +
-        '<span class="section-status ' + statusClass + '">' + statusLabel + ' <button class="btn" id="cont-refresh" style="margin-left:8px;padding:2px 8px;font-size:10.5px;">Refresh</button></span>' +
-      '</div>';
-    if (cd.status === 'loading') return contractorHead('Loading…', 'loading', '');
-    if (cd.status === 'error') return contractorHead('Error', 'error', escapeHtml(cd.error || '')) +
-      '<div class="fin-card"><div style="font-size:12px;color:var(--danger);">Couldn\'t load contractor sheet: ' + escapeHtml(cd.error || '') + '</div></div>';
-    if (cd.status === 'unavailable') return contractorHead('Unavailable', 'warn', '') +
-      '<div class="fin-card"><div style="font-size:12px;color:var(--text-muted);">Live Drive sync not available in this environment.</div></div>';
-    if (cd.status !== 'loaded') return contractorHead('Click refresh to load', 'warn', '');
+      const typeLabels = Object.keys(typeCounts);
+      const typeData = Object.values(typeCounts);
+      const typeColors = ['#8b5cf6', '#3b82f6', '#06b6d4', '#14b8a6', '#10b981', '#fb923c'];
 
-    const contractors = Object.entries(cd.byContractor || {}).filter(([n,v]) => v.paid > 0).sort((a,b) => b[1].paid - a[1].paid);
-    const trades = Object.entries(cd.byTrade || {}).filter(([n,v]) => v.paid > 0).sort((a,b) => b[1].paid - a[1].paid);
-    const recent = (cd.allPayments || []).filter(p => p.amount && p.date).slice().sort((a,b) => {
-      const da = parseDate(a.date), db = parseDate(b.date);
-      if (!da) return 1; if (!db) return -1;
-      return db - da;
-    }).slice(0, 15);
+      const typeCtx = document.getElementById('typeChart').getContext('2d');
+      new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+          labels: typeLabels,
+          datasets: [{
+            data: typeData,
+            backgroundColor: typeColors.slice(0, typeLabels.length)
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#c9d4e8',
+                padding: 15,
+                font: { family: "'SF Mono', monospace", size: 12 }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#d4a82c',
+              bodyColor: '#c9d4e8'
+            }
+          }
+        }
+      });
+    }
 
-    return contractorHead('Loaded ' + cd.lastLoaded.toLocaleTimeString(), 'ok', (cd.tables.length) + ' property tabs · ' + (cd.allPayments || []).length + ' payments · temporary 1-month replacement source') +
-      '<div class="fin-card" style="background:#fffbeb;border-color:#fde68a;padding:10px 14px;">' +
-        '<div style="font-size:11.5px;color:#92400e;"><strong>Note:</strong> This is a temporary contractor sheet (~1 month of data) replacing one we lost access to. Property attribution lives in tab names — not in the row data — so payments are aggregated globally rather than tied to specific addresses. When the permanent sheet is back, swap CONTRACTOR_SHEET_FILE_ID and parsing will adapt automatically if column structure matches.</div>' +
-      '</div>' +
-      '<div class="fin-tiles">' +
-        '<div class="fin-tile"><div class="ft-label">Total Contractor Spend</div><div class="ft-value">' + fmtMoneyShort(cd.totalPaid) + '</div><div class="ft-sub">Across ' + (cd.allPayments || []).length + ' payments</div></div>' +
-        '<div class="fin-tile"><div class="ft-label">Agreed Contracts</div><div class="ft-value">' + fmtMoneyShort(cd.totalAgreed) + '</div><div class="ft-sub">Sum of "Agreed Amount" across active rows</div></div>' +
-        '<div class="fin-tile"><div class="ft-label">Outstanding Balance</div><div class="ft-value">' + fmtMoneyShort(cd.totalBalance) + '</div><div class="ft-sub">' + (cd.totalAgreed > 0 ? Math.round((cd.totalPaid / cd.totalAgreed) * 100) + '% of agreed paid' : 'Pending agreed amounts') + '</div></div>' +
-        '<div class="fin-tile"><div class="ft-label">Active Contractors</div><div class="ft-value">' + contractors.length + '</div><div class="ft-sub">' + trades.length + ' trade categories with spend</div></div>' +
-      '</div>' +
-      '<div class="contractor-grid">' +
-        '<div class="fin-card">' +
-          '<div class="fin-card-title">By Contractor <span class="badge">' + contractors.length + '</span></div>' +
-          '<div class="cont-list">' +
-            (contractors.length ? contractors.map(([name, v]) => {
-              const pct = cd.totalPaid > 0 ? (v.paid / cd.totalPaid) * 100 : 0;
-              return '<div class="cont-row"><div><span class="cont-name">' + escapeHtml(name) + '</span><span class="cont-sub">' + v.count + ' pmt' + (v.count !== 1 ? 's' : '') + ' · ' + pct.toFixed(0) + '%</span></div><div class="cont-amt">' + fmtMoneyShort(v.paid) + '</div></div>';
-            }).join('') : '<div style="font-size:12px;color:var(--text-faint);padding:8px 4px;">No contractor activity recorded yet.</div>') +
-          '</div>' +
-        '</div>' +
-        '<div class="fin-card">' +
-          '<div class="fin-card-title">By Trade <span class="badge">' + trades.length + '</span></div>' +
-          '<div class="cont-list">' +
-            (trades.length ? trades.map(([name, v]) => {
-              const pct = cd.totalPaid > 0 ? (v.paid / cd.totalPaid) * 100 : 0;
-              return '<div class="cont-row"><div><span class="cont-name">' + escapeHtml(name) + '</span><span class="cont-sub">' + v.count + ' pmt' + (v.count !== 1 ? 's' : '') + ' · ' + pct.toFixed(0) + '%</span></div><div class="cont-amt">' + fmtMoneyShort(v.paid) + '</div></div>';
-            }).join('') : '<div style="font-size:12px;color:var(--text-faint);padding:8px 4px;">No trade activity recorded yet.</div>') +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      (recent.length ? '<div class="fin-card">' +
-        '<div class="fin-card-title">Recent Contractor Payments <span class="badge">last ' + recent.length + '</span></div>' +
-        '<div style="overflow-x:auto;">' +
-          '<table class="fin-table">' +
-            '<thead><tr><th>Date</th><th>Contractor</th><th>Trade</th><th class="num">Property #</th><th class="num">Amount</th></tr></thead><tbody>' +
-            recent.map(p => '<tr>' +
-              '<td>' + escapeHtml(p.date || '—') + '</td>' +
-              '<td>' + escapeHtml(p.contractor || '<span class="muted">—</span>') + '</td>' +
-              '<td>' + escapeHtml(p.trade || '<span class="muted">—</span>') + '</td>' +
-              '<td class="num">#' + p.propertyIndex + '</td>' +
-              '<td class="num">' + fmtMoneyShort(p.amount) + '</td>' +
-            '</tr>').join('') +
-          '</tbody></table>' +
-        '</div></div>' : '');
-  }
+    initCharts();
 
-  function wireUpButtons() {
-    const m = id => { const el = document.getElementById(id); if (el) return el; };
-    const bind = (id, fn) => { const el = m(id); if (el) el.addEventListener('click', fn); };
-    bind('fin-retry', loadLoanSheet);
-    bind('fin-refresh-now', loadLoanSheet);
-    bind('fin-load-now', loadLoanSheet);
-    bind('draws-refresh', loadDrawsSheet);
-    bind('cont-refresh', loadContractorSheet);
-  }
+    // Properties Table
+    function renderPropertiesTable() {
+      const tbody = document.getElementById('propertiesBody');
+      const sorted = [...PROPERTIES].sort((a, b) => {
+        const aIdx = STAGES.findIndex(s => s.id === a.stage);
+        const bIdx = STAGES.findIndex(s => s.id === b.stage);
+        return aIdx - bIdx;
+      });
 
-  if (ld.status !== 'loaded') {
-    panel.innerHTML = statusHtml + buildDrawsSection() + buildContractorSection();
-    wireUpButtons();
-    return;
-  }
+      sorted.forEach(prop => {
+        const row = document.createElement('tr');
+        const stageColor = getStageColor(prop.stage);
 
-  // Compute metrics
-  const kiaviLoans = ld.active.filter(r => /kiavi/i.test(r.lender || ''));
-  const genesisLoans = ld.active.filter(r => /genesis/i.test(r.lender || ''));
-  const otherLoans = ld.active.filter(r => !/kiavi|genesis/i.test(r.lender || ''));
-  const kiaviExposure = kiaviLoans.reduce((s, r) => s + (r.loanAmount || 0), 0);
-  const genesisExposure = genesisLoans.reduce((s, r) => s + (r.loanAmount || 0), 0);
-  const totalLoans = ld.active.reduce((s, r) => s + (r.loanAmount || 0), 0);
-  const totalDrawn = ld.active.reduce((s, r) => s + (r.drawAmount || 0), 0);
-  const monthlyPayments = ld.active.reduce((s, r) => s + (r.payment || 0), 0);
-  const remainingDraw = totalLoans - totalDrawn;
-  const kiaviPct = (kiaviExposure / KIAVI_LIMIT) * 100;
+        row.innerHTML = `
+          <td>${prop.address}</td>
+          <td><span class="stage-badge-inline" style="background-color: ${stageColor}33; color: ${stageColor};">${getStageName(prop.stage)}</span></td>
+          <td>${prop.type}</td>
+          <td>${formatDate(prop.purchaseDate)}</td>
+          <td class="num-cell">${formatCurrency(prop.purchasePrice)}</td>
+          <td class="num-cell">${daysAgo(prop.purchaseDate)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
 
-  const today = new Date();
-  const propsWithCarry = ld.active.map(r => {
-    const start = parseDate(r.purchaseDate);
-    const days = start ? Math.max(0, Math.round((today - start) / 86400000)) : null;
-    const months = days != null ? days / 30.44 : null;
-    const carrying = months && r.payment ? months * r.payment : null;
-    return Object.assign({}, r, { _daysHeld: days, _carrying: carrying });
-  });
-  const totalCarrying = propsWithCarry.reduce((s, r) => s + (r._carrying || 0), 0);
+    renderPropertiesTable();
 
-  // Closed lifetime metrics
-  const closedByYear = {};
-  for (const c of ld.closed) {
-    const d = parseDate(c.closedDate);
-    if (!d) continue;
-    const y = d.getFullYear();
-    if (!closedByYear[y]) closedByYear[y] = { count: 0, resale: 0, purchase: 0, loanAmt: 0 };
-    closedByYear[y].count++;
-    closedByYear[y].resale += c.resalePrice || 0;
-    closedByYear[y].purchase += c.purchasePrice || 0;
-    closedByYear[y].loanAmt += c.loanAmount || 0;
-  }
-  const lifetimeCount = ld.closed.length;
-  const lifetimeResale = ld.closed.reduce((s, c) => s + (c.resalePrice || 0), 0);
-  const lifetimePurchase = ld.closed.reduce((s, c) => s + (c.purchasePrice || 0), 0);
-  const lifetimeSpread = lifetimeResale - lifetimePurchase;
+    // Recent Closings
+    function renderClosings() {
+      const list = document.getElementById('closingsList');
+      const sorted = [...SOLD].sort((a, b) => new Date(b.closingDate) - new Date(a.closingDate));
 
-  const tilesHtml = '<div class="fin-tiles">' +
-    '<div class="fin-tile"><div class="ft-label">Total Active Exposure</div><div class="ft-value">' + fmtMoneyShort(totalLoans) + '</div><div class="ft-sub">' + ld.active.length + ' loans across ' + (kiaviLoans.length ? kiaviLoans.length + ' Kiavi' : '') + (kiaviLoans.length && genesisLoans.length ? ' + ' : '') + (genesisLoans.length ? genesisLoans.length + ' Genesis' : '') + (otherLoans.length ? ' + ' + otherLoans.length + ' other' : '') + '</div></div>' +
-    '<div class="fin-tile"><div class="ft-label">Drawn / Available</div><div class="ft-value">' + fmtMoneyShort(totalDrawn) + '</div><div class="ft-sub">' + fmtMoneyShort(remainingDraw) + ' draw remaining (' + Math.round((totalDrawn/Math.max(totalLoans,1))*100) + '% drawn)</div></div>' +
-    '<div class="fin-tile"><div class="ft-label">Monthly Debt Service</div><div class="ft-value">' + fmtMoneyShort(monthlyPayments) + '</div><div class="ft-sub">' + fmtMoneyShort(monthlyPayments * 12) + ' annualized</div></div>' +
-    '<div class="fin-tile"><div class="ft-label">Carrying Cost YTD</div><div class="ft-value">' + fmtMoneyShort(totalCarrying) + '</div><div class="ft-sub">Cumulative across active</div></div>' +
-    '<div class="fin-tile kiavi"><div class="ft-label">Kiavi Exposure</div><div class="ft-value">' + fmtMoneyShort(kiaviExposure) + '</div><div class="ft-sub">' + kiaviPct.toFixed(0) + '% of $10M limit · ' + fmtMoneyShort(KIAVI_LIMIT - kiaviExposure) + ' remaining</div></div>' +
-    '<div class="fin-tile genesis"><div class="ft-label">Genesis Exposure</div><div class="ft-value">' + fmtMoneyShort(genesisExposure) + '</div><div class="ft-sub">' + genesisLoans.length + ' loans · avg ' + fmtMoneyShort(genesisExposure / Math.max(genesisLoans.length, 1)) + '</div></div>' +
-  '</div>';
+      sorted.forEach(closing => {
+        const item = document.createElement('div');
+        item.className = 'closing-item';
+        item.innerHTML = `
+          <div>${closing.address}</div>
+          <div class="closing-date">${formatDate(closing.closingDate)}</div>
+        `;
+        list.appendChild(item);
+      });
+    }
 
-  const lenderHtml = '<div class="fin-grid-2">' +
-    '<div class="fin-card">' +
-      '<div class="fin-card-title">Lender Exposure</div>' +
-      '<div class="lender-row">' +
-        '<div class="lender-label">Kiavi <span class="muted">($10M limit)</span></div>' +
-        '<div class="lender-bar"><div class="lender-fill kiavi" style="width:' + Math.min(100, kiaviPct).toFixed(1) + '%"></div></div>' +
-        '<div class="lender-amt">' + fmtMoneyShort(kiaviExposure) + ' <span class="muted">/ $10M (' + kiaviPct.toFixed(0) + '%)</span></div>' +
-      '</div>' +
-      '<div class="lender-row">' +
-        '<div class="lender-label">Genesis Capital</div>' +
-        '<div class="lender-bar"><div class="lender-fill genesis" style="width:100%"></div></div>' +
-        '<div class="lender-amt">' + fmtMoneyShort(genesisExposure) + ' <span class="muted">across ' + genesisLoans.length + ' loans</span></div>' +
-      '</div>' +
-      '<div class="fin-card-sub">Avg loan size — Kiavi ' + fmtMoneyShort(kiaviExposure / Math.max(kiaviLoans.length, 1)) + ' · Genesis ' + fmtMoneyShort(genesisExposure / Math.max(genesisLoans.length, 1)) + '</div>' +
-    '</div>' +
-    '<div class="fin-card">' +
-      '<div class="fin-card-title">Lifetime Footprint <span class="badge">' + lifetimeCount + ' closed</span></div>' +
-      '<div class="lifetime-row"><span class="lifetime-label">Total purchase volume</span><span class="lifetime-val">' + fmtMoneyShort(lifetimePurchase) + '</span></div>' +
-      '<div class="lifetime-row"><span class="lifetime-label">Total resale volume</span><span class="lifetime-val">' + fmtMoneyShort(lifetimeResale) + '</span></div>' +
-      '<div class="lifetime-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;"><span class="lifetime-label" style="font-weight:600;">Gross spread</span><span class="lifetime-val" style="color:#047857;">' + fmtMoneyShort(lifetimeSpread) + '</span></div>' +
-      '<div class="fin-card-sub">From all 8 closed-property tabs in the loan sheet. Pulled live; refreshes on click.</div>' +
-    '</div>' +
-  '</div>';
-
-  const detailHtml = '<div class="fin-card">' +
-    '<div class="fin-card-title">Active Loan Detail <span class="badge">' + ld.active.length + ' loans</span></div>' +
-    '<div style="overflow-x:auto;">' +
-    '<table class="fin-table">' +
-      '<thead><tr>' +
-        '<th>Address</th><th>Lender</th><th>Loan #</th>' +
-        '<th class="num">Loan Amt</th><th class="num">Drawn</th><th class="num">Available</th>' +
-        '<th class="num">Payment</th><th class="num">Rate</th><th class="num">Days Held</th><th class="num">Carrying $</th>' +
-      '</tr></thead><tbody>' +
-      propsWithCarry.map(r => {
-        const lc = /kiavi/i.test(r.lender || '') ? 'kiavi' : /genesis/i.test(r.lender || '') ? 'genesis' : '';
-        return '<tr>' +
-          '<td>' + escapeHtml(r.address) + '</td>' +
-          '<td><span class="lender-pill ' + lc + '">' + escapeHtml(r.lender || '—') + '</span></td>' +
-          '<td class="mono">' + escapeHtml(r.loanNumber || '—') + '</td>' +
-          '<td class="num">' + fmtMoneyShort(r.loanAmount) + '</td>' +
-          '<td class="num">' + fmtMoneyShort(r.drawAmount) + '</td>' +
-          '<td class="num">' + fmtMoneyShort((r.loanAmount || 0) - (r.drawAmount || 0)) + '</td>' +
-          '<td class="num">' + fmtMoneyShort(r.payment) + '</td>' +
-          '<td class="num">' + (r.rate || '<span class="muted">—</span>') + '</td>' +
-          '<td class="num">' + (r._daysHeld != null ? r._daysHeld + 'd' : '—') + '</td>' +
-          '<td class="num">' + fmtMoneyShort(r._carrying) + '</td>' +
-        '</tr>';
-      }).join('') +
-    '</tbody></table>' +
-    '</div></div>';
-
-  const yearlyHtml = '<div class="fin-card">' +
-    '<div class="fin-card-title">Closed Volume by Year <span class="badge">All 8 tabs from loan sheet</span></div>' +
-    '<div style="overflow-x:auto;">' +
-    '<table class="fin-table">' +
-      '<thead><tr>' +
-        '<th>Year</th><th class="num">Deals</th><th class="num">Purchase Volume</th><th class="num">Resale Volume</th>' +
-        '<th class="num">Gross Spread</th><th class="num">Avg Spread/Deal</th><th class="num">Loan Funded</th>' +
-      '</tr></thead><tbody>' +
-      Object.entries(closedByYear).sort((a,b) => b[0] - a[0]).map(([y, d]) => {
-        const spread = d.resale - d.purchase;
-        return '<tr class="yr-row"><td><strong>' + y + '</strong></td>' +
-          '<td class="num">' + d.count + '</td>' +
-          '<td class="num">' + fmtMoneyShort(d.purchase) + '</td>' +
-          '<td class="num">' + fmtMoneyShort(d.resale) + '</td>' +
-          '<td class="num pos">' + fmtMoneyShort(spread) + '</td>' +
-          '<td class="num">' + fmtMoneyShort(spread / Math.max(d.count, 1)) + '</td>' +
-          '<td class="num">' + fmtMoneyShort(d.loanAmt) + '</td>' +
-        '</tr>';
-      }).join('') +
-    '</tbody></table>' +
-    '</div></div>';
-
-  const anomalyHtml = ld.anomalies && ld.anomalies.length ? (
-    '<div class="fin-card">' +
-      '<div class="fin-card-title">Data Anomalies <span class="badge">' + ld.anomalies.length + ' flagged</span></div>' +
-      '<div class="anomaly-list">' +
-        ld.anomalies.map(a => '<div class="anomaly anomaly-' + a.severity + '"><div class="anomaly-addr">' + escapeHtml(a.address) + '</div><div class="anomaly-issue">' + escapeHtml(a.issue) + '</div></div>').join('') +
-      '</div>' +
-      '<div class="fin-card-sub">High = needs immediate fix · Mid = worth investigating · Low = informational. These run on every refresh from the source sheet.</div>' +
-    '</div>'
-  ) : '<div class="fin-card"><div class="fin-card-title">Data Anomalies</div><div style="padding:10px 0;color:var(--success);font-size:12.5px;">No anomalies detected — sheet looks clean.</div></div>';
-
-  // === Active Draws + Contractor sections via helper closures (defined above for DRY) ===
-  // Compose: status banner → Active Draws (priority) → Lender Exposure tiles + Lender → Loan detail → Closed by year → Anomalies → Contractor (standalone)
-  panel.innerHTML =
-    statusHtml +
-    buildDrawsSection() +
-    '<div class="fin-section-head" style="margin-top:22px;"><span>Lender Exposure &amp; Closed Footprint</span></div>' +
-    tilesHtml + lenderHtml + detailHtml + yearlyHtml + anomalyHtml +
-    buildContractorSection();
-
-  wireUpButtons();
-}
-
-function rerenderAll() {
-  renderDashboard();
-  renderKanban();
-  renderList();
-  rerenderFinancials();
-  updateBrandSub();
-}
-function updateBrandSub() {
-  const n = state.properties.length;
-  const active = state.properties.filter(p => p.stage !== 'SOLD').length;
-  const sold = state.properties.filter(p => p.stage === 'SOLD').length;
-  let suffix = '';
-  if (state.loanData && state.loanData.status === 'loaded') {
-    suffix = ' · ' + state.loanData.active.length + ' loans live';
-  }
-  document.getElementById('brand-sub').textContent = active + ' active · ' + sold + ' sold · ' + n + ' total' + suffix;
-}
-
-function setTab(t) {
-  state.activeTab = t;
-  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
-  document.querySelectorAll('.panel').forEach(el => el.classList.toggle('active', el.dataset.panel === t));
-  if (t === 'dashboard') setTimeout(() => { renderStageChart(); renderTypeChart(); renderYearlyChart(); renderCityChart(); }, 20);
-  if (t === 'financials') {
-    rerenderFinancials();
-    // First-time: trigger loads if we haven't yet
-    if (!state.loanData || state.loanData.status === 'idle') setTimeout(() => loadLoanSheet(), 50);
-    if (!state.drawsData || state.drawsData.status === 'idle') setTimeout(() => loadDrawsSheet(), 100);
-    if (!state.contractorData || state.contractorData.status === 'idle') setTimeout(() => loadContractorSheet(), 150);
-  }
-}
-
-function init() {
-  document.getElementById('modal').hidden = true;
-  document.getElementById('thresholds-modal').hidden = true;
-
-  const stageSel = document.getElementById('field-stage');
-  stageSel.innerHTML = STAGES.map(s => '<option value="' + s.id + '">' + s.label + '</option>').join('');
-
-  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
-
-  document.getElementById('add-btn').addEventListener('click', openAdd);
-  document.getElementById('export-btn').addEventListener('click', exportCSV);
-  document.getElementById('reset-btn').addEventListener('click', resetData);
-  document.getElementById('thresholds-btn').addEventListener('click', openThresholds);
-  document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
-  document.getElementById('import-file').addEventListener('change', e => {
-    const f = e.target.files[0]; if (!f) return;
-    const reader = new FileReader();
-    reader.onload = ev => importCSV(ev.target.result);
-    reader.readAsText(f);
-    e.target.value = '';
-  });
-
-  document.getElementById('global-search').addEventListener('input', e => { state.search = e.target.value; renderList(); });
-
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  document.getElementById('cancel-btn').addEventListener('click', closeModal);
-  document.getElementById('save-btn').addEventListener('click', saveEdit);
-  document.getElementById('delete-btn').addEventListener('click', deleteProp);
-  document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
-
-  document.getElementById('thresholds-close').addEventListener('click', closeThresholds);
-  document.getElementById('thresh-cancel').addEventListener('click', closeThresholds);
-  document.getElementById('thresh-save').addEventListener('click', commitThresholds);
-  document.getElementById('thresh-reset-btn').addEventListener('click', resetThresholdsFn);
-  document.getElementById('thresholds-modal').addEventListener('click', e => { if (e.target.id === 'thresholds-modal') closeThresholds(); });
-
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
-    if (!document.getElementById('modal').hidden) closeModal();
-    else if (!document.getElementById('thresholds-modal').hidden) closeThresholds();
-  });
-
-  document.querySelectorAll('#list-table thead th').forEach(th => {
-    th.addEventListener('click', () => {
-      const k = th.dataset.sort;
-      if (state.sortKey === k) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
-      else { state.sortKey = k; state.sortDir = 'asc'; }
-      renderList();
-    });
-  });
-
-  rerenderAll();
-
-  // Kick off Drive loads shortly after first paint so KPIs/cards get enriched.
-  setTimeout(() => { loadLoanSheet(); }, 200);
-  setTimeout(() => { loadDrawsSheet(); }, 350);
-  setTimeout(() => { loadContractorSheet(); }, 500);
-}
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
-})();
-</script>
-<div style="text-align:center; padding:20px; font-size:11px; color:#98a0b3; border-top:1px solid #e3e6ee; margin-top:20px;">DNT Home Buyers · Properties Pipeline · Data persists in browser localStorage · <a href="index.html" style="color:#10b981; text-decoration:none;">← Back to Hub</a></div>
+    renderClosings();
+  </script>
 </body>
 </html>
