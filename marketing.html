@@ -39,7 +39,7 @@
   .data-status { margin-top: 16px; padding: 10px 14px; border-radius: 6px; font-family: "SF Mono", monospace; font-size: 11px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .data-status.fresh { background: rgba(77,222,128,0.08); border: 1px solid rgba(77,222,128,0.3); color: #4ade80; }
   .data-status.baked { background: rgba(107,120,148,0.08); border: 1px solid #2a3651; color: #8a96b0; }
-  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-top: 24px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
   .tile { background: #131929; border: 1px solid #1c2538; border-radius: 8px; padding: 18px; }
   .tile .label { font-family: "SF Mono", monospace; font-size: 10px; color: #6b7894; letter-spacing: 1.5px; }
   .tile .value { font-size: 26px; font-weight: 700; margin-top: 8px; font-family: "SF Mono", monospace; }
@@ -107,7 +107,7 @@
   .back-hub { display: block; text-align: center; margin-top: 32px; padding: 12px; font-size: 12px; color: #6b7894; text-decoration: none; border-top: 1px solid #1c2538; }
   .back-hub:hover { color: #d4a82c; }
   @media (max-width: 1100px) {
-    .tiles { grid-template-columns: repeat(3, 1fr); }
+    .tiles { grid-template-columns: repeat(2, 1fr); }
     .row-2 { grid-template-columns: 1fr; }
     .anomalies { grid-template-columns: 1fr; }
     .footer-list { grid-template-columns: 1fr; }
@@ -125,7 +125,7 @@
   <div class="header-right">
     <div class="header-stats">
       <div class="label">YTD SPEND &middot; <span id="periodLabel">120 DAYS</span></div>
-      <div class="big"><span id="hdrTotal">$86.3K</span> <span class="label-inline">total</span> <span class="gold" id="hdrRunRate">$262.6K</span> <span class="label-inline">run-rate</span></div>
+      <div class="big"><span id="hdrTotal">$86.3K</span> <span class="label-inline">total</span> <span class="gold" id="hdrRunRate">$262.6K</span> <span class="label-inline">projected</span> <span style="color:#4dd0e1" id="hdrActualRate">$249.2K</span> <span class="label-inline">actual</span></div>
       <div class="small" id="hdrPeriod">Jan 1 &ndash; Apr 30, 2026 &middot; 201 transactions</div>
     </div>
     <div class="header-buttons">
@@ -541,21 +541,61 @@ function processAttribution(rows) {
 }
 
 function destroyCharts() { Object.values(charts).forEach(c => { try { c.destroy(); } catch(e) {} }); charts = {}; }
+function momBadge(curr, prev) {
+  if (!prev || prev === 0) return '<span style="color:#6b7894">— new</span>';
+  const pct = ((curr - prev) / prev * 100).toFixed(0);
+  const arrow = curr > prev ? "▲" : curr < prev ? "▼" : "—";
+  const color = curr > prev ? "#f87171" : curr < prev ? "#4ade80" : "#6b7894";
+  return `<span style="color:${color}">${arrow} ${Math.abs(pct)}%</span>`;
+}
 function renderTiles() {
   const t = state.totals;
+  const m = state.monthly;
   const monthlyAvg = t.total / (t.daysCovered/30.4);
-  const runRate = t.total * 365 / t.daysCovered;
+  const projectedRate = t.total * 365 / t.daysCovered;
   const dailyRate = t.total / t.daysCovered;
   const topVendor = state.vendors[0];
+
+  // Actual run rate: last full month × 12
+  // If last month label contains "(partial)", use second-to-last
+  const labels = m.labels || [];
+  const totals = m.total || [];
+  const laborArr = m.labor || [];
+  const overheadArr = m.overhead || [];
+  let lastFullIdx = totals.length - 1;
+  if (lastFullIdx >= 0 && labels[lastFullIdx] && labels[lastFullIdx].includes("(partial)") && lastFullIdx > 0) {
+    lastFullIdx--;
+  }
+  const lastFullTotal = lastFullIdx >= 0 ? totals[lastFullIdx] : 0;
+  const actualRate = lastFullTotal * 12;
+  const lastFullLabel = lastFullIdx >= 0 ? labels[lastFullIdx].replace(" (partial)","") : "—";
+
+  // MoM: last full month vs the one before it
+  const prevIdx = lastFullIdx - 1;
+  const laborCurr = lastFullIdx >= 0 ? laborArr[lastFullIdx] : 0;
+  const laborPrev = prevIdx >= 0 ? laborArr[prevIdx] : 0;
+  const overheadCurr = lastFullIdx >= 0 ? overheadArr[lastFullIdx] : 0;
+  const overheadPrev = prevIdx >= 0 ? overheadArr[prevIdx] : 0;
+  const prevLabel = prevIdx >= 0 ? labels[prevIdx].replace(" (partial)","") : "—";
+
+  // Rate delta
+  const rateDelta = actualRate - projectedRate;
+  const rateDir = rateDelta > 0 ? "▲" : rateDelta < 0 ? "▼" : "—";
+  const rateDeltaColor = rateDelta > 0 ? "#f87171" : "#4ade80";
+
   document.getElementById("tiles").innerHTML = `
     <div class="tile"><div class="label">TOTAL SPEND</div><div class="value v-cyan">${fmt$k(t.total)}</div><div class="sub">${fmt$(monthlyAvg)}/mo avg</div></div>
     <div class="tile"><div class="label">MARKETING ONLY</div><div class="value v-blue">${fmt$k(t.marketing)}</div><div class="sub">${(t.marketing/t.total*100).toFixed(1)}% of total</div></div>
+    <div class="tile"><div class="label">PROJECTED RUN-RATE</div><div class="value v-gold">${fmt$k(projectedRate)}</div><div class="sub">YTD avg · ${fmt$(dailyRate)}/day</div></div>
+    <div class="tile"><div class="label">ACTUAL RUN-RATE</div><div class="value v-cyan">${fmt$k(actualRate)}</div><div class="sub">Based on ${lastFullLabel} · <span style="color:${rateDeltaColor}">${rateDir} ${fmt$k(Math.abs(rateDelta))}</span> vs projected</div></div>
+    <div class="tile"><div class="label">LABOR MoM</div><div class="value v-green">${fmt$(laborCurr)}</div><div class="sub">${lastFullLabel} vs ${prevLabel} · ${momBadge(laborCurr, laborPrev)}</div></div>
+    <div class="tile"><div class="label">OVERHEAD MoM</div><div class="value v-orange">${fmt$(overheadCurr)}</div><div class="sub">${lastFullLabel} vs ${prevLabel} · ${momBadge(overheadCurr, overheadPrev)}</div></div>
     <div class="tile"><div class="label">LABOR (VA + STAFF)</div><div class="value v-green">${fmt$k(t.labor)}</div><div class="sub">${(t.labor/t.total*100).toFixed(1)}% of total</div></div>
     <div class="tile"><div class="label">OVERHEAD</div><div class="value v-orange">${fmt$k(t.overhead)}</div><div class="sub">Phone + dues</div></div>
-    <div class="tile"><div class="label">RUN-RATE (ANNUALIZED)</div><div class="value v-gold">${fmt$k(runRate)}</div><div class="sub">${fmt$(dailyRate)}/day</div></div>
     <div class="tile"><div class="label">VENDORS</div><div class="value v-purple">${t.vendorCount}</div><div class="sub">Top vendor: ${topVendor ? topVendor.pct + "%" : "—"}</div></div>`;
   document.getElementById("hdrTotal").textContent = fmt$k(t.total);
-  document.getElementById("hdrRunRate").textContent = fmt$k(runRate);
+  document.getElementById("hdrRunRate").textContent = fmt$k(projectedRate);
+  document.getElementById("hdrActualRate").textContent = fmt$k(actualRate);
   document.getElementById("hdrPeriod").textContent = `${t.periodStart} – ${t.periodEnd} · ${t.txCount} transactions`;
   document.getElementById("periodLabel").textContent = t.daysCovered + " DAYS";
 }
